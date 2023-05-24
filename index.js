@@ -5,6 +5,15 @@ const Vibrant = require('node-vibrant')
 const convert = require('color-convert');
 const chalk = require('chalk');
 
+if(process.env.TUYA_DEVICE_ID) config.device.id = process.env.TUYA_DEVICE_ID;
+if(process.env.TUYA_DEVICE_KEY) config.device.key = process.env.TUYA_DEVICE_KEY;
+if(process.env.TUYA_DEVICE_IP) config.device.ip = process.env.TUYA_DEVICE_IP;
+if(process.env.TUYA_DEVICE_VERSION) config.device.version = process.env.TUYA_DEVICE_VERSION;
+if(process.env.SPOTIFY_CLIENT_ID) config.spotify.client_id = process.env.SPOTIFY_CLIENT_ID;
+if(process.env.SPOTIFY_CLIENT_SECRET) config.spotify.client_secret = process.env.SPOTIFY_CLIENT_SECRET;
+if(process.env.SPOTIFY_ACCESS_TOKEN) config.spotify.access = process.env.SPOTIFY_ACCESS_TOKEN;
+if(process.env.SPOTIFY_REFRESH_TOKEN) config.spotify.refresh = process.env.SPOTIFY_REFRESH_TOKEN;
+
 const device = new TuyAPI({
     id: config.device.id,
     key: config.device.key,
