@@ -17,7 +17,7 @@ if(process.env.SPOTIFY_REFRESH_TOKEN) config.spotify.refresh = process.env.SPOTI
 const device = new TuyAPI({
     id: config.device.id,
     key: config.device.key,
-    //ip: config.device.ip,
+    ip: config.device.ip,
     version: config.device.version,
     issueGetOnConnect: true
 });
