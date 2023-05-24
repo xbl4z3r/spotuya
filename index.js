@@ -5,22 +5,10 @@ const Vibrant = require('node-vibrant')
 const convert = require('color-convert');
 const chalk = require('chalk');
 
-if(process.env.TUYA_DEVICE_ID) config.device.id = process.env.TUYA_DEVICE_ID;
-if(process.env.TUYA_DEVICE_KEY) config.device.key = process.env.TUYA_DEVICE_KEY;
-if(process.env.TUYA_DEVICE_IP) config.device.ip = process.env.TUYA_DEVICE_IP;
-if(process.env.TUYA_DEVICE_VERSION) config.device.version = process.env.TUYA_DEVICE_VERSION;
-if(process.env.SPOTIFY_CLIENT_ID) config.spotify.client_id = process.env.SPOTIFY_CLIENT_ID;
-if(process.env.SPOTIFY_CLIENT_SECRET) config.spotify.client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-if(process.env.SPOTIFY_ACCESS_TOKEN) config.spotify.access = process.env.SPOTIFY_ACCESS_TOKEN;
-if(process.env.SPOTIFY_REFRESH_TOKEN) config.spotify.refresh = process.env.SPOTIFY_REFRESH_TOKEN;
-
-const device = new TuyAPI({
-    id: config.device.id,
-    key: config.device.key,
-    ip: config.device.ip,
-    version: config.device.version,
-    issueGetOnConnect: true
-});
+if(config.spotify.client_id === undefined || config.spotify.client_secret === undefined) {
+    console.log(chalk.red("Please add your Spotify client_id and client_secret to the config.json file."));
+    process.exit(1);
+}
 
 // Create a new instance of the SpotifyWebApi object
 const spotifyApi = new SpotifyWebApi({
@@ -52,29 +40,42 @@ let initialState = {
     color: "010403200302"
 }
 
+if(config.spotify.access === undefined) {
+    console.log(chalk.red("Please add your Spotify access token to the config.json file."));
+    process.exit(1);
+}
+
 spotifyApi.setAccessToken(config.spotify.access);
-spotifyApi.setRefreshToken(config.spotify.refresh);
 
-spotifyApi.refreshAccessToken().then(
-    function (data) {
-        if (data.statusCode !== 200) {
-            console.log('Could not refresh access token', data);
-            return;
+if (config.spotify.refresh !== undefined) {
+    spotifyApi.setRefreshToken(config.spotify.refresh);
+
+    spotifyApi.refreshAccessToken().then(
+        function (data) {
+            if (data.statusCode !== 200) {
+                console.log('Could not refresh access token', data);
+                return;
+            }
+            if (config.debug) console.log('The access token has been refreshed!');
+
+            // Save the access token so that it's used in future calls
+            spotifyApi.setAccessToken(data.body['access_token']);
+            spotifyApi.setRefreshToken(data.body['refresh_token']);
+            config.spotify.access = data.body['access_token'];
+            config.spotify.refresh = data.body['refresh_token'];
+        },
+        function (err) {
+            console.log('Could not refresh access token', err);
         }
-        if(config.debug) console.log('The access token has been refreshed!');
+    );
+}
 
-        // Save the access token so that it's used in future calls
-        spotifyApi.setAccessToken(data.body['access_token']);
-        spotifyApi.setRefreshToken(data.body['refresh_token']);
-        config.spotify.access = data.body['access_token'];
-        config.spotify.refresh = data.body['refresh_token'];
-    },
-    function (err) {
-        console.log('Could not refresh access token', err);
+const checkCurrentSong = (id) => {
+    if(id === undefined) 
+    {
+        console.log(chalk.red("Internal error. Please contact the developer."));
+        process.exit(1);
     }
-);
-
-const checkCurrentSong = () => {
     try {
         spotifyApi.getMyCurrentPlaybackState()
             .then(async function (data) {
@@ -92,7 +93,7 @@ const checkCurrentSong = () => {
                         const rgb = palette.Vibrant.getRgb();
                         const hsv = convert.rgb.hsv(rgb[0], rgb[1], rgb[2]);
                         const hexvalue = hsvToHex(hsv[0] / 360, hsv[1] / 100, hsv[2] / 100);
-                        device.set({
+                        devices[id].set({
                             multiple: true,
                             data: {
                                 '20': true,
@@ -105,9 +106,9 @@ const checkCurrentSong = () => {
                 } else {
                     isPlaying = false;
                     if (!setState) {
-                        await startChecker();
+                        await startChecker(id);
                         setState = true;
-                        device.set({
+                        devices[id].set({
                             multiple: true,
                             data: {
                                 '20': initialState.powered,
@@ -126,10 +127,10 @@ const checkCurrentSong = () => {
     }
 }
 
-const checker = () => {
-    if(killCheckerVar) return;
+const checker = (id) => {
+    if (killCheckerVar) return;
     if (!isPlaying) {
-        device.get({ schema: true }).then(data => {
+        devices[id].get({ schema: true }).then(data => {
             initialState.powered = data.dps['20'];
             initialState.color = data.dps['24'];
         });
@@ -141,32 +142,72 @@ const killChecker = () => {
     killCheckerVar = true;
 }
 
-const startChecker = () => {
+const startChecker = (id) => {
+    if(id === undefined) 
+    {
+        console.log(chalk.red("Internal error. Please contact the developer."));
+        process.exit(1);
+    }
     killCheckerVar = false;
-    checker();
+    checker(id);
 }
 
-// Find device on network
-device.find().then(() => {
-    // Connect to device
-    device.connect();
-});
+// go through each config.devices
+// create a new instance of TuyAPI
+// add it to the devices array
+const devices = [];
+for (let device of config.devices) {
+    if (device.ip !== undefined && device.version !== undefined) {
+        devices.push(new TuyAPI({
+            id: device.id,
+            key: device.key,
+            ip: device.ip,
+            version: device.version
+        }));
+    } else if (device.ip !== undefined) {
+        devices.push(new TuyAPI({
+            id: device.id,
+            key: device.key,
+            ip: device.ip
+        }));
+    } else if (device.version !== undefined) {
+        devices.push(new TuyAPI({
+            id: device.id,
+            key: device.key,
+            version: device.version
+        }));
+    } else if(device.id !== undefined && device.key !== undefined) {
+        devices.push(new TuyAPI({
+            id: device.id,
+            key: device.key
+        }));
+    } else {
+        console.log("Invalid device config");
+        process.exit(1);
+    }
 
-// Add event listeners
-device.on('connected', async () => {
-    console.log('Connected to device!');
-    startChecker();
-    checkCurrentSong();
-});
+    // Find device on network
+    devices[devices.length - 1].find().then(() => {
+        // Connect to device
+        devices[devices.length - 1].connect();
+    });
 
-device.on('disconnected', () => {
-    if(config.debug) console.log('Disconnected from device.');
-});
+    // Add event listeners
+    devices[devices.length - 1].on('connected', async () => {
+        console.log('Connected to device!');
+        startChecker(devices.length - 1);
+        checkCurrentSong(devices.length - 1);
+    });
 
-device.on('error', error => {
-    if(config.debug) console.log('Error!', error);
-});
+    devices[devices.length - 1].on('disconnected', () => {
+        if (config.debug) console.log('Disconnected from device.');
+    });
 
-device.on('data', data => {
-    if(config.debug) console.log('Data from device:', data);
-});
+    devices[devices.length - 1].on('error', error => {
+        console.log('Error!', error);
+    });
+
+    devices[devices.length - 1].on('data', data => {
+        if (config.debug) console.log('Data from device:', data);
+    });
+}

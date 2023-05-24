@@ -5,11 +5,19 @@
         "client_id": "SPOTIFY-APP-ID-HERE",
         "client_secret": "SPOTIFY-APP-SECRET-HERE"
     },
-    "device": {
-        "id": "DEVICE-ID-HERE",
-        "key": "DEVICE-KEY-HERE",
-        "ip": "DEVICE-IP-HERE (should be local if running on same network as device)",
-        "version": "DEVICE-VERSION-HERE (e.g. 3.3)"
+    "devices": {
+        "0": {
+            "id": "DEVICE0-ID-HERE",
+            "key": "DEVICE0-KEY-HERE",
+            "ip": "DEVICE0-IP-HERE (should be local if running on same network as device)",
+            "version": "DEVICE0-VERSION-HERE (e.g. 3.3)"
+        },
+        "1": {
+            "id": "DEVICE1-ID-HERE",
+            "key": "DEVICE1-KEY-HERE",
+            "ip": "DEVICE1-IP-HERE (should be local if running on same network as device)",
+            "version": "DEVICE1-VERSION-HERE (e.g. 3.3)"
+        }
     },
     "debug": false
 }
