@@ -1,0 +1,19 @@
+{
+  "name": "spotify-tuya",
+  "version": "1.0.0",
+  "description": "A simple script to change the color of your Tuya lights based on the album art of the song you're listening to on Spotify.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "keywords": ["tuya", "spotify", "automatation", "lights", "music", "color", "iot", "nodejs", "javascript", "script", "integration", "api", "spotify-web-api-node", "tuyapi", "node-vibrant", "color-convert", "chalk"],
+  "author": "xbl4z3r",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "color-convert": "^2.0.1",
+    "node-vibrant": "^3.2.1-alpha.1",
+    "spotify-web-api-node": "^5.0.2",
+    "tuyapi": "^7.5.2"
+  }
+}

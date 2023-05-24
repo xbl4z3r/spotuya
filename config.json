@@ -1,0 +1,15 @@
+{
+    "spotify": {
+        "access": "YOUR-SPOTIFY-ACCESS-TOKEN-HERE",
+        "refresh": "YOUR-SPOTIFY-REFRESH-TOKEN-HERE",
+        "client_id": "SPOTIFY-APP-ID-HERE",
+        "client_secret": "SPOTIFY-APP-SECRET-HERE"
+    },
+    "device": {
+        "id": "DEVICE-ID-HERE",
+        "key": "DEVICE-KEY-HERE",
+        "ip": "DEVICE-IP-HERE (should be local if running on same network as device)",
+        "version": "DEVICE-VERSION-HERE (e.g. 3.3)"
+    },
+    "debug": false
+}
