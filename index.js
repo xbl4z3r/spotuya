@@ -10,6 +10,21 @@ if(config.spotify.client_id === undefined || config.spotify.client_secret === un
     process.exit(1);
 }
 
+if(config.devices === undefined) {
+    console.log(chalk.red("Please add your devices to the config.json file."));
+    process.exit(1);
+}
+
+if(config.refresh_interval === undefined) {
+    console.log(chalk.red("Please add your refresh_interval to the config.json file."));
+    process.exit(1);
+}
+
+if(config.debug === undefined) {
+    console.log(chalk.red("Please add your debug to the config.json file."));
+    process.exit(1);
+}
+
 // Create a new instance of the SpotifyWebApi object
 const spotifyApi = new SpotifyWebApi({
     clientId: config.spotify.client_id,
@@ -118,7 +133,7 @@ const checkCurrentSong = (id) => {
                         });
                     }
                 }
-                setTimeout(checkCurrentSong, 1000);
+                setTimeout(checkCurrentSong, config.refresh_interval);
             }, function (err) {
                 console.log('Something went wrong!', err);
             });
@@ -135,7 +150,7 @@ const checker = (id) => {
             initialState.color = data.dps['24'];
         });
     }
-    setTimeout(checker, 10000);
+    setTimeout(checker, 10 * refresh_interval);
 }
 
 const killChecker = () => {

@@ -19,5 +19,6 @@
             "version": "DEVICE1-VERSION-HERE (e.g. 3.3)"
         }
     },
-    "debug": false
+    "debug": false,
+    "refresh_interval": 1000
 }
