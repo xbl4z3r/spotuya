@@ -1,18 +1,14 @@
-# Spotify Tuya
-Spotify Tuya is a simple script to change the color of your Tuya lights based on the album art of the song you're listening to on Spotify. It is written in JavaScript and is easy to set up. It's using `tuyapi` package and it's currently set to work with Light Devices Type B (data should be structured from 20 to 24).<br>
+# SpoTuya
+SpoTuya, formerly known as Spotify-Tuya, is a simple CLI to change the color of your Tuya lights based on the cover art of the song you're listening to on Spotify. It is written in JavaScript and is easy to set up. It's using `tuyapi` package and it's currently set to work with Light Devices Type B (data should be structured from 20 to 24). I'm planning to add support for all device types later.<br>
 <br>
-## Set-up
-You will need to edit the `config.json` to match your devices & Spotify account. <br>
+## Installation
+To install SpoTuya you can run `npm install -g spotuya`. This will install the CLI globally on your machine. You can also install it locally by running `npm install spotuya`.<br>
 <br>
-To set up Spotify you will need a developer app in the Spotify for Developers portal. You will then have a Client ID and a Client Secret. Replace the default value in the `config.json` with the information provided by Spotify. Next up you will need to supply the config with an access token and a refresh token. You can use a tool like `@spotifly/auth-token
-` to get both of the tokens or a tool like `spotify-token` to get only the access token in case you get an expired access token error. Please make sure that the tokens are generated with the scopes: `user-read-currently-playing` and `user-read-playback-state`.<br>
+## Setup
+To setup SpoTuya you just have to run `spotuya setup` or `spotuya wizard` and follow the instructions. You will be asked to provide a Tuya ID, a Tuya Secret and (sometimes) a single device's virtual ID. You can find the Tuya ID and Secret in the [Tuya Developer Console](https://iot.tuya.com/cloud). The virtual ID can be found under the devices tab in the project console. Remember that you first need to add your devices to the project via the Tuya Smart app before running the SpoTuya wizard. After all that information has been provided, the wizard will ask for a Spotify Application ID and Secret and open a Spotify OAuth2 page where you will be asked to login and authorize the application.<br>
 <br>
-To set up Tuya devices there are a couple of ways and the `tuyapi` has a good tutorial on how to get the device ID and Key. The IP needs to be the device's local IP if you want to use it, but it isn't necessary. The version number tells the program how to decrypt and call events on your device. The default version number is 3.1 and it will use that unless specified otherwise.<br>
-<br>
-## Common Errors
-One of the most common errors is `401: Token expired`. If you get this error try supplying the `config.json` with a new access token generated via a tool like `spotify-token`. Please make sure that the token is generated with the scopes: `user-read-currently-playing` and `user-read-playback-state`.<br>
-<br>
-For any errors related to Tuya Devices please make sure that the devices are powered and have been assigned the correct version number. Also please note that for now we only support Light Devices Type B (data should be structured from 20 to 24).<br>
+## Usage
+To use SpoTuya you just have to run the command `spotuya start` and it will start listening for Spotify events. You can also run `spotuya help` to see all the available commands.<br>
 <br>
 ## Contributing
 To contribute to this project, you can follow these steps:
