@@ -2,7 +2,7 @@
 SpoTuya, formerly known as Spotify-Tuya, is a simple CLI to change the color of your Tuya lights based on the cover art of the song you're listening to on Spotify. It is written in JavaScript and is easy to set up. It's using `tuyapi` package and it's currently set to work with Light Devices Type B (data should be structured from 20 to 24). I'm planning to add support for all device types later.<br>
 <br>
 ## Installation
-To install SpoTuya you can run `npm install -g spotuya`. This will install the CLI globally on your machine. You can also install it locally by running `npm install spotuya`.<br>
+To install SpoTuya clone this repository and run `npm install -g .`. This will install the CLI globally on your machine. You can also install it locally by running `npm install .`.<br>
 <br>
 ## Setup
 To setup SpoTuya you just have to run `spotuya setup` or `spotuya wizard` and follow the instructions. You will be asked to provide a Tuya ID, a Tuya Secret and (sometimes) a single device's virtual ID. You can find the Tuya ID and Secret in the [Tuya Developer Console](https://iot.tuya.com/cloud). The virtual ID can be found under the devices tab in the project console. Remember that you first need to add your devices to the project via the Tuya Smart app before running the SpoTuya wizard. After all that information has been provided, the wizard will ask for a Spotify Application ID and Secret and open a Spotify OAuth2 page where you will be asked to login and authorize the application.<br>
