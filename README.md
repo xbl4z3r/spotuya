@@ -11,7 +11,7 @@ The latest version of SpoTuya supports the following features:
 - [x] Automatically reconnect to Spotify when the access token expires.
 - [ ] Start SpoTuya on system startup.
 <br>
-<br>
+
 ## Setup
 To setup SpoTuya you just have to run `spotuya setup` or `spotuya wizard` and follow the instructions. You will be asked to provide a Tuya ID, a Tuya Secret and (sometimes) a single device's virtual ID. You can find the Tuya ID and Secret in the [Tuya Developer Console](https://iot.tuya.com/cloud). The virtual ID can be found under the devices tab in the project console. Remember that you first need to add your devices to the project via the Tuya Smart app before running the SpoTuya wizard. After all that information has been provided, the wizard will ask for a Spotify Application ID and Secret and open a Spotify OAuth2 page where you will be asked to login and authorize the application.<br>
 <br>
