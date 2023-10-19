@@ -11,6 +11,10 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
 export default class Utils {
     static SPOTIFY_COLOR = "#1DB954";
+    static DEFAULT_STATE = {
+        powered: false,
+        color: "010403200302"
+    }
     static CREDENTIAL_QUESTIONS = [
         {
             name: 'clientId',
@@ -59,10 +63,6 @@ export default class Utils {
         }
 
         return text;
-    }
-
-    static getDirname() {
-        return __dirname;
     }
 
     static getVersion() {

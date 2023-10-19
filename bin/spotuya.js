@@ -28,6 +28,7 @@ import Utils from "./utils.js";
 
 import inquirer from "inquirer";
 import Device, {DeviceType} from "./device.js";
+import Playback from "./playback.js";
 
 console.log(chalk.hex(Utils.SPOTIFY_COLOR).bold(" .oooooo..o                      ooooooooooooo                                   \n" +
     "d8P'    `Y8                      8'   888   `8                                   \n" +
@@ -41,16 +42,10 @@ console.log(chalk.hex(Utils.SPOTIFY_COLOR).bold(" .oooooo..o                    
     "                                                                                 "));
 console.log(chalk.white.bold("> Made with " + chalk.red("♥") + " by " + chalk.hex(Utils.SPOTIFY_COLOR)("xbl4z3r") + " | v" + Utils.getVersion() + " | Not affiliated with " + chalk.hex(Utils.SPOTIFY_COLOR)("Spotify®")));
 
-const DEFAULT_STATE = {
-    powered: false,
-    color: "010403200302"
-}
 
 const args = process.argv.slice(2);
 
-const setState = [];
 let spotifyApi;
-let isPlaying = false;
 const tuyaDevices = [];
 (async () => {
     if (args.includes("--debug")) Logger.setDebugMode(true);
@@ -174,8 +169,7 @@ const tuyaDevices = [];
                     id: device.id,
                     key: device.key,
                     issueGetOnConnect: true
-                }), DeviceType.TYPE_B, DEFAULT_STATE));
-                setState.push(false);
+                }), DeviceType.TYPE_B, Utils.DEFAULT_STATE));
             } else {
                 Logger.error("Invalid device config");
                 continue;
@@ -211,12 +205,12 @@ const tuyaDevices = [];
                     return;
                 }
 
-                let defaultState = {
+                let startState = {
                     powered: data.dps[tuyaDevices[tuyaDevices.length - 1].getStatusId()],
                     color: data.dps[tuyaDevices[tuyaDevices.length - 1].getColorId()]
                 }
 
-                tuyaDevices[tuyaDevices.length - 1].setDefaultState(defaultState);
+                tuyaDevices[tuyaDevices.length - 1].setDefaultState(startState);
             });
 
             tuyaDevices[tuyaDevices.length - 1].getTuyaDevice().on('disconnected', () => Logger.debug('Disconnected from device.'));
@@ -229,22 +223,16 @@ const tuyaDevices = [];
 const checkCurrentSong = function (id) {
     spotifyApi.getMyCurrentPlaybackState()
         .then(async function (data) {
-            if (data.body.is_playing) {
-                isPlaying = true;
-                setState[id] = false;
+            Playback.isPlaying = data.body.is_playing;
+            if (Playback.isPlaying) {
                 await Vibrant.from(data.body.item.album.images[0].url).getPalette(async (err, palette) => {
                     const rgb = palette.Vibrant.rgb;
                     const hsv = convert.rgb.hsv(rgb[0], rgb[1], rgb[2]);
                     const hex_value = Utils.hsvToHex(hsv[0] / 360, hsv[1] / 100, hsv[2] / 100);
-
                     tuyaDevices[id].updateDevice(true, hex_value);
                 })
             } else {
-                isPlaying = false;
-                if (!setState[id]) {
-                    setState[id] = true;
-                    tuyaDevices[id].resetDevice()
-                }
+                tuyaDevices[id].resetDevice()
             }
         }, () => Logger.fatal("Something went wrong while checking the current song. Check your config.json file."));
 }

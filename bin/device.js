@@ -9,6 +9,8 @@ export default class Device {
     tuyaDevice
     deviceType
     initialState
+    hasBeenReset = false
+
     constructor(tuyaDevice, deviceType, initialState) {
         this.tuyaDevice = tuyaDevice;
         this.deviceType = deviceType;
@@ -16,6 +18,7 @@ export default class Device {
     }
 
     updateDevice(status, color) {
+        this.hasBeenReset = false;
         switch (this.deviceType) {
             case DeviceType.TYPE_B:
                 this.tuyaDevice.set({
@@ -42,8 +45,9 @@ export default class Device {
         }
     }
 
-    resetDevice(shouldWait = false)
-    {
+    resetDevice(shouldWait = false) {
+        if (!this.hasBeenReset) return;
+        this.hasBeenReset = true;
         switch (this.deviceType) {
             case DeviceType.TYPE_B:
                 this.tuyaDevice.set({

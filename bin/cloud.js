@@ -80,26 +80,20 @@ export default class Cloud {
         }
 
         // Output devices
-        const prettyDevices = Object.values(groupedDevices).map(device => {
+        return Object.values(groupedDevices).map(device => {
             const pretty = {
                 name: device.name,
                 id: device.id,
                 key: device.local_key
             };
-
             if (device.subDevices) {
-                const prettySubDevices = device.subDevices.map(subDevice => ({
+                pretty.subDevices = device.subDevices.map(subDevice => ({
                     name: subDevice.name,
                     id: subDevice.id,
                     cid: subDevice.node_id
                 }));
-
-                pretty.subDevices = prettySubDevices;
             }
-
             return pretty;
         });
-
-        return prettyDevices;
     }
 }
