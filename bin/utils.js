@@ -1,4 +1,13 @@
 import chalk from "chalk";
+import {fileURLToPath} from "url";
+import path from "path";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const packageJsonPath = path.join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
 export default class Utils {
     static SPOTIFY_COLOR = "#1DB954";
@@ -40,4 +49,23 @@ export default class Utils {
         }
         return hex_value;
     };
+
+    static generateRandomString(length) {
+        let text = '';
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+        for (let i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+
+        return text;
+    }
+
+    static getDirname() {
+        return __dirname;
+    }
+
+    static getVersion() {
+        return packageJson.version;
+    }
 }

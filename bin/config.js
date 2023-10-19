@@ -2,14 +2,19 @@ import Logger from "./logger.js";
 import os from "os";
 import path from "path";
 import fs from "fs";
+import Utils from "./utils.js";
 
 const CONFIG_FILE_NAME = 'config.json';
 
 const DEFAULT_CONFIG = {
     devices: [],
-    accessToken: "",
-    clientId: "",
-    clientSecret: "",
+    spotify: {
+        accessToken: "",
+        refreshToken: "",
+        clientId: "",
+        clientSecret: ""
+    },
+    configVersion: Utils.getVersion(),
     refreshRate: 1000
 }
 
@@ -33,9 +38,7 @@ export default class Config {
 
                 this.configPath = path.join(this.configPath, CONFIG_FILE_NAME);
 
-                if (!fs.existsSync(this.configPath) || shouldClean) {
-                    fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
-                }
+                if (!fs.existsSync(this.configPath) || shouldClean) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
                 break;
             case 'linux':
                 this.configPath = path.join(os.homedir(), '.config', 'spotuya');
@@ -44,9 +47,7 @@ export default class Config {
 
                 this.configPath = path.join(this.configPath, CONFIG_FILE_NAME);
 
-                if (!fs.existsSync(this.configPath) || shouldClean) {
-                    fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
-                }
+                if (!fs.existsSync(this.configPath) || shouldClean) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
                 break;
             case 'darwin':
                 this.configPath = path.join(os.homedir(), 'Library', 'Application Support', 'spotuya');
@@ -55,9 +56,7 @@ export default class Config {
 
                 this.configPath = path.join(this.configPath, CONFIG_FILE_NAME);
 
-                if (!fs.existsSync(this.configPath) || shouldClean) {
-                    fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
-                }
+                if (!fs.existsSync(this.configPath) || shouldClean) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
                 break;
             case "android":
                 this.configPath = path.join(os.homedir(), 'spotuya');
@@ -66,9 +65,7 @@ export default class Config {
 
                 this.configPath = path.join(this.configPath, CONFIG_FILE_NAME);
 
-                if (!fs.existsSync(this.configPath) || shouldClean) {
-                    fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
-                }
+                if (!fs.existsSync(this.configPath) || shouldClean) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
                 break;
             default:
                 Logger.fatal('Unsupported platform');
