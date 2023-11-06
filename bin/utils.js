@@ -41,9 +41,8 @@ export default class Utils {
     ];
     static hsvToHex = (h, s, v) => {
         // turn the contrast to the max
-        if (s < 0.6) s += 0.25;
         let hex_value = "";
-        let hsv_array = [Math.round(h * 360), Math.round(s * 1000), Math.round(v * 1000)];
+        let hsv_array = [Math.round(h * 360), Math.round(1000), Math.round(v * 1000)];
         for (let value of hsv_array) {
             let temp = value.toString(16).replace("0x", "");
             while (temp.length < 4) {

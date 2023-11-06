@@ -25,6 +25,8 @@ export default class Device {
                     multiple: true,
                     data: {
                         '20': status,
+                        '22': 1000,
+                        '23': 1000,
                         '24': color,
                     },
                     shouldWaitForResponse: false
@@ -35,6 +37,8 @@ export default class Device {
                     multiple: true,
                     data: {
                         '1': status,
+                        '3': 1000,
+                        '4': 1000,
                         '5': color,
                     },
                     shouldWaitForResponse: false
@@ -46,7 +50,8 @@ export default class Device {
     }
 
     resetDevice(shouldWait = false) {
-        if (!this.hasBeenReset) return;
+        if (this.hasBeenReset) return;
+        Logger.debug('Resetting device to ' + this.initialState.powered + ' and ' + this.initialState.color);
         this.hasBeenReset = true;
         switch (this.deviceType) {
             case DeviceType.TYPE_B:
@@ -54,6 +59,8 @@ export default class Device {
                     multiple: true,
                     data: {
                         '20': this.initialState.powered,
+                        '22': 100,
+                        '23': 100,
                         '24': this.initialState.color,
                     },
                     shouldWaitForResponse: shouldWait

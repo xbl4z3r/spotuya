@@ -70,9 +70,9 @@ const tuyaDevices = [];
 
             const spotifyConfig = config.spotify;
 
-            if (spotifyConfig.accessToken === "") {
+            if (spotifyConfig.accessToken === "" || spotifyConfig.accessToken === undefined || args.includes("--clean")) {
                 Logger.debug("No Spotify access token found. Prompting user to log in...");
-                if (config.clientId === "" || config.clientSecret === "") {
+                if (spotifyConfig.clientId === "" || spotifyConfig.clientSecret === "" || spotifyConfig.clientId === undefined || spotifyConfig.clientSecret === undefined) {
                     const answers = await inquirer.prompt(Utils.CREDENTIAL_QUESTIONS);
                     spotifyConfig.clientId = answers.clientId;
                     spotifyConfig.clientSecret = answers.clientSecret;
@@ -135,7 +135,7 @@ const tuyaDevices = [];
 
         if (spotifyConfig.accessToken === "" || spotifyConfig.accessToken === undefined) {
             Logger.warn("No Spotify access token found. Prompting user to log in...");
-            if (config.clientId === "" || config.clientSecret === "") {
+            if (spotifyConfig.clientId === "" || spotifyConfig.clientSecret === "" || spotifyConfig.clientId === undefined || spotifyConfig.clientSecret === undefined) {
                 const answers = await inquirer.prompt(Utils.CREDENTIAL_QUESTIONS);
                 spotifyConfig.clientId = answers.clientId;
                 spotifyConfig.clientSecret = answers.clientSecret;
