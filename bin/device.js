@@ -51,7 +51,7 @@ export default class Device {
 
     resetDevice(shouldWait = false) {
         if (this.hasBeenReset) return;
-        Logger.debug('Resetting device to ' + this.initialState.powered + ' and ' + this.initialState.color);
+        Logger.debug('Resetting device ' + this.tuyaDevice.device.id + ' to ' + this.initialState.powered + ' and ' + this.initialState.color);
         this.hasBeenReset = true;
         switch (this.deviceType) {
             case DeviceType.TYPE_B:

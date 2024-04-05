@@ -55,7 +55,6 @@ app.get('/token', (req, res) => {
     const refreshToken = req.query.refresh_token
     if (refreshToken) SpotifyAccessToken.refreshToken = refreshToken
     if (accessToken) SpotifyAccessToken.accessToken = accessToken;
-    // evaluate javascript on the page to close it
     res.send('<script>window.close()</script>')
 })
 
@@ -80,12 +79,12 @@ export default class SpotifyAccessToken {
     }
 
     static async getAccessToken() {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             if (this.refreshToken.length > 5) {
                 Logger.debug("Logging in with refresh token...");
                 const authOptions = {
                     url: 'https://accounts.spotify.com/api/token',
-                    headers: {'Authorization': 'Basic ' + (new Buffer(SpotifyAccessToken.CLIENT_ID + ':' + SpotifyAccessToken.CLIENT_SECRET).toString('base64'))},
+                    headers: {'Authorization': 'Basic ' + (Buffer.from(SpotifyAccessToken.CLIENT_ID + ':' + SpotifyAccessToken.CLIENT_SECRET).toString('base64'))},
                     form: {
                         grant_type: 'refresh_token',
                         refresh_token: this.refreshToken
@@ -95,7 +94,7 @@ export default class SpotifyAccessToken {
                 request.post(authOptions, function (error, response, body) {
                     if (!error && response.statusCode === 200) {
                         SpotifyAccessToken.accessToken = body.access_token;
-                        if (body.refresh_token.length > 5) SpotifyAccessToken.refreshToken = body.refresh_token
+                        if (body.refresh_token) SpotifyAccessToken.refreshToken = body.refresh_token
                         const response = {
                             accessToken: SpotifyAccessToken.accessToken,
                             refreshToken: SpotifyAccessToken.refreshToken
