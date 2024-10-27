@@ -1,121 +1,115 @@
 import Logger from "./logger.js";
-
-export const DeviceType = {
-    TYPE_A: 'TYPE_A',
-    TYPE_B: 'TYPE_B'
-}
+import Cloud from "./cloud.js";
 
 export default class Device {
-    tuyaDevice
-    deviceType
+    id
+    name
+    key
     initialState
+    lastColor = null;
     hasBeenReset = false
+    interval = null;
 
-    constructor(tuyaDevice, deviceType, initialState) {
-        this.tuyaDevice = tuyaDevice;
-        this.deviceType = deviceType;
-        this.initialState = initialState;
-    }
-
-    updateDevice(status, color) {
+    constructor(deviceData) {
+        this.id = deviceData.id;
+        this.name = deviceData.name;
+        this.key = deviceData.key;
         this.hasBeenReset = false;
-        switch (this.deviceType) {
-            case DeviceType.TYPE_B:
-                this.tuyaDevice.set({
-                    multiple: true,
-                    data: {
-                        '20': status,
-                        '22': 1000,
-                        '23': 1000,
-                        '24': color,
-                    },
-                    shouldWaitForResponse: false
-                });
-                break;
-            case DeviceType.TYPE_A:
-                this.tuyaDevice.set({
-                    multiple: true,
-                    data: {
-                        '1': status,
-                        '3': 1000,
-                        '4': 1000,
-                        '5': color,
-                    },
-                    shouldWaitForResponse: false
-                });
-                break;
-            default:
-                Logger.fatal("Invalid device found. Did Tuya implement a new device type?");
-        }
     }
 
-    resetDevice(shouldWait = false) {
+    async initialize() {
+        this.hasBeenReset = false;
+        
+        const response = await Cloud.getContext().request({
+            method: 'GET',
+            path: `/v1.0/devices/${this.id}/status`,
+        });
+
+        if (!response.success) {
+            Logger.error('Failed to get device status');
+            return;
+        }
+
+        if (response.result[1].value !== 'colour') {
+            Logger.debug(`Setting device ${this.name} (${this.id}) to color mode...`);
+            await Cloud.getContext().request({
+                method: 'POST',
+                path: `/v1.0/devices/${this.id}/commands`,
+                body: {
+                    commands: [
+                        {
+                            code: response.result[1].code,
+                            value: 'colour',
+                        },
+                    ],
+                },
+            });
+        }
+        
+        this.initialState = {
+            powered: {
+                code: response.result[0].code,
+                value: response.result[0].value,
+            },
+            color: {
+                code: response.result[2].code,
+                value: JSON.parse(response.result[2].value),
+            },
+        };
+        
+        Logger.debug(`Device ${this.name} (${this.id}) initialized with state: ${JSON.stringify(this.initialState)}`);
+    }
+    
+    setInterval(interval) {
+        this.interval = interval;
+    }
+
+    setColor(color) {
+        this.hasBeenReset = false;
+        if (JSON.stringify(this.lastColor) === JSON.stringify(color)) return;
+        this.lastColor = color;
+        Logger.debug(`Setting device ${this.name} (${this.id}) to color: ${JSON.stringify(color)}`);
+        Cloud.getContext().request({
+            method: 'POST',
+            path: `/v1.0/devices/${this.id}/commands`,
+            body: {
+                commands: [
+                    {
+                        code: this.initialState.powered.code,
+                        value: true,
+                    },
+                    {
+                        code: this.initialState.color.code,
+                        value: color
+                    }
+                ],
+            },
+        });
+    }
+
+    async resetDevice() {
         if (this.hasBeenReset) return;
-        Logger.debug('Resetting device ' + this.tuyaDevice.device.id + ' to ' + this.initialState.powered + ' and ' + this.initialState.color);
+        Logger.debug(`Resetting device ${this.name} (${this.id}) to initial state...`);
         this.hasBeenReset = true;
-        switch (this.deviceType) {
-            case DeviceType.TYPE_B:
-                this.tuyaDevice.set({
-                    multiple: true,
-                    data: {
-                        '20': this.initialState.powered,
-                        '22': 100,
-                        '23': 100,
-                        '24': this.initialState.color,
+        await Cloud.getContext().request({
+            method: 'POST',
+            path: `/v1.0/devices/${this.id}/commands`,
+            body: {
+                commands: [
+                    {
+                        code: this.initialState.powered.code,
+                        value: this.initialState.powered.value,
                     },
-                    shouldWaitForResponse: shouldWait
-                });
-                break;
-            case DeviceType.TYPE_A:
-                this.tuyaDevice.set({
-                    multiple: true,
-                    data: {
-                        '1': this.initialState.powered,
-                        '5': this.initialState.color,
-                    },
-                    shouldWaitForResponse: shouldWait
-                });
-                break;
-            default:
-                Logger.fatal("Invalid device found. Did Tuya implement a new device type?");
-        }
+                    {
+                        code: this.initialState.color.code,
+                        value: JSON.stringify(this.initialState.color.value),
+                    }
+                ],
+            },
+        });
     }
-
-    getDeviceType() {
-        return this.deviceType;
-    }
-
-    getTuyaDevice() {
-        return this.tuyaDevice;
-    }
-
-    setDeviceType(deviceType) {
-        this.deviceType = deviceType;
-    }
-
-    getStatusId() {
-        switch (this.deviceType) {
-            case DeviceType.TYPE_A:
-                return '1';
-            case DeviceType.TYPE_B:
-                return '20';
-            default:
-                Logger.fatal('Unknown device type');
-        }
-    }
-
-    getColorId() {
-        switch (this.deviceType) {
-            case DeviceType.TYPE_A:
-                return '5';
-            case DeviceType.TYPE_B:
-                return '24';
-            default:
-                Logger.fatal('Unknown device type');
-        }
-    }
-
-    setDefaultState(state) {
-        this.initialState = state;
+    
+    async destroy() {
+        if (this.interval) clearInterval(this.interval);
     }
 }

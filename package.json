@@ -1,7 +1,7 @@
 {
   "name": "spotuya",
-  "version": "1.1.0",
-  "description": "A simple CLI to automatically change the color of your Tuya LED lights based on the cover art of the song you're listening to on Spotify.",
+  "version": "2.0.0",
+  "description": "A simple background process to automatically change the color of your Tuya LED lights based on the cover art of the song you're listening to on Spotify.",
   "main": "bin/spotuya.js",
   "repository": "https://github.com/xbl4z3r/spotuya",
   "bugs": {
@@ -44,7 +44,8 @@
     "@tuya/tuya-connector-nodejs": "^2.1.2",
     "chalk": "^5.3.0",
     "color-convert": "^2.0.1",
-    "express": "^4.18.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
     "inquirer": "^9.2.11",
     "node-vibrant": "^3.2.1-alpha.1",
     "open": "^10.0.2",

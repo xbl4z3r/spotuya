@@ -4,8 +4,10 @@ import request from "request";
 
 import Logger from "./logger.js";
 import Utils from "./utils.js";
+import SpotifyWebApi from "spotify-web-api-node";
+import Config from "./config.js";
 
-const PORT = 4815
+const PORT = Config.getPort();
 const SCOPE = [
     'user-read-playback-state',
     'user-read-currently-playing',
@@ -30,7 +32,7 @@ app.get('/callback', (req, res) => {
                 grant_type: 'authorization_code'
             },
             headers: {
-                'Authorization': 'Basic ' + (new Buffer.from(SpotifyAccessToken.CLIENT_ID + ':' + SpotifyAccessToken.CLIENT_SECRET).toString('base64'))
+                'Authorization': 'Basic ' + (new Buffer.from(SpotifyTokenStore.CLIENT_ID + ':' + SpotifyTokenStore.CLIENT_SECRET).toString('base64'))
             },
             json: true
         };
@@ -53,12 +55,12 @@ app.get('/callback', (req, res) => {
 app.get('/token', (req, res) => {
     const accessToken = req.query.access_token
     const refreshToken = req.query.refresh_token
-    if (refreshToken) SpotifyAccessToken.refreshToken = refreshToken
-    if (accessToken) SpotifyAccessToken.accessToken = accessToken;
+    if (refreshToken) SpotifyTokenStore.refreshToken = refreshToken
+    if (accessToken) SpotifyTokenStore.accessToken = accessToken;
     res.send('<script>window.close()</script>')
 })
 
-export default class SpotifyAccessToken {
+export class SpotifyTokenStore {
     static CLIENT_ID = "";
     static CLIENT_SECRET = "";
     static accessToken = "";
@@ -84,7 +86,7 @@ export default class SpotifyAccessToken {
                 Logger.debug("Logging in with refresh token...");
                 const authOptions = {
                     url: 'https://accounts.spotify.com/api/token',
-                    headers: {'Authorization': 'Basic ' + (Buffer.from(SpotifyAccessToken.CLIENT_ID + ':' + SpotifyAccessToken.CLIENT_SECRET).toString('base64'))},
+                    headers: {'Authorization': 'Basic ' + (Buffer.from(SpotifyTokenStore.CLIENT_ID + ':' + SpotifyTokenStore.CLIENT_SECRET).toString('base64'))},
                     form: {
                         grant_type: 'refresh_token',
                         refresh_token: this.refreshToken
@@ -93,11 +95,11 @@ export default class SpotifyAccessToken {
                 };
                 request.post(authOptions, function (error, response, body) {
                     if (!error && response.statusCode === 200) {
-                        SpotifyAccessToken.accessToken = body.access_token;
-                        if (body.refresh_token) SpotifyAccessToken.refreshToken = body.refresh_token
+                        SpotifyTokenStore.accessToken = body.access_token;
+                        if (body.refresh_token) SpotifyTokenStore.refreshToken = body.refresh_token
                         const response = {
-                            accessToken: SpotifyAccessToken.accessToken,
-                            refreshToken: SpotifyAccessToken.refreshToken
+                            accessToken: SpotifyTokenStore.accessToken,
+                            refreshToken: SpotifyTokenStore.refreshToken
                         }
                         resolve(response);
                     }
@@ -136,5 +138,39 @@ export default class SpotifyAccessToken {
 
     static setRefreshToken(refreshToken) {
         this.refreshToken = refreshToken;
+    }
+}
+
+export class SpotifyPlaybackStore {
+    static isPlaying = false;
+    
+    static setPlaying(playing) {
+        this.isPlaying = playing;
+    }
+    
+    static getPlaying() {
+        return this.isPlaying;
+    }
+}
+
+export class SpotifyApiProvider {
+    spotifyApi
+    static instance = new SpotifyApiProvider();
+    
+    static initialize(clientId, clientSecret, accessToken = null) {
+        SpotifyApiProvider.instance.spotifyApi = new SpotifyWebApi({
+            clientId: clientId,
+            clientSecret: clientSecret,
+            scope: 'user-read-currently-playing user-read-playback-state',
+        });
+        if (accessToken) SpotifyApiProvider.setAccessToken(accessToken);
+    }
+    
+    static setAccessToken(accessToken) {
+        SpotifyApiProvider.instance.spotifyApi.setAccessToken(accessToken);
+    }
+    
+    static getApi() {
+        return SpotifyApiProvider.instance.spotifyApi;
     }
 }

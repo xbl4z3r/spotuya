@@ -7,7 +7,22 @@ import Utils from "./utils.js";
 const REGIONS = ['eu', 'us', 'cn', 'in'];
 
 export default class Cloud {
-    static wizard = async () => {
+    context
+    userId
+    region
+    static instance = new Cloud();
+    
+    static async initialize(config) {
+        Cloud.instance.userId = config.userId;
+        Cloud.instance.region = config.region;
+        Cloud.instance.context = new TuyaContext({
+            baseUrl: `https://openapi.tuya${config.region}.com`,
+            accessKey: config.clientId,
+            secretKey: config.clientSecret
+        });
+    }
+    
+    static async wizard() {
         let questions = [
             {
                 name: 'deviceId',
@@ -21,15 +36,15 @@ export default class Cloud {
         const answers = await inquirer.prompt(questions);
 
         // Get seed device
-        let userId;
+        let foundUserId;
         let foundAPIRegion;
 
         try {
             const {device, region} = await Promise.any(REGIONS.map(async region => {
                 const api = new TuyaContext({
                     baseUrl: `https://openapi.tuya${region}.com`,
-                    accessKey: answers.apiKey,
-                    secretKey: answers.apiSecret
+                    accessKey: answers.clientId,
+                    secretKey: answers.clientSecret
                 });
 
                 const result = await api.request({
@@ -44,7 +59,7 @@ export default class Cloud {
                 return {device: result.result, region};
             }));
 
-            userId = device.uid;
+            foundUserId = device.uid;
             foundAPIRegion = region;
         } catch (error) {
             Logger.fatal("Error while setting up... Make sure your details are correct and try again.");
@@ -53,13 +68,13 @@ export default class Cloud {
         // Get user devices
         const api = new TuyaContext({
             baseUrl: `https://openapi.tuya${foundAPIRegion}.com`,
-            accessKey: answers.apiKey,
-            secretKey: answers.apiSecret
+            accessKey: answers.clientId,
+            secretKey: answers.clientSecret
         });
 
         const result = await api.request({
             method: 'GET',
-            path: `/v1.0/users/${userId}/devices`
+            path: `/v1.0/users/${foundUserId}/devices`
         });
 
         if (!result.success) {
@@ -78,22 +93,30 @@ export default class Cloud {
                 groupedDevices[device.local_key] = {...device, ...groupedDevices[device.local_key]};
             }
         }
-
-        // Output devices
-        return Object.values(groupedDevices).map(device => {
-            const pretty = {
-                name: device.name,
-                id: device.id,
-                key: device.local_key
-            };
-            if (device.subDevices) {
-                pretty.subDevices = device.subDevices.map(subDevice => ({
-                    name: subDevice.name,
-                    id: subDevice.id,
-                    cid: subDevice.node_id
-                }));
-            }
-            return pretty;
-        });
+        return {
+            devices: Object.values(groupedDevices).map(device => {
+                const pretty = {
+                    name: device.name,
+                    id: device.id,
+                    key: device.local_key
+                };
+                if (device.subDevices) {
+                    pretty.subDevices = device.subDevices.map(subDevice => ({
+                        name: subDevice.name,
+                        id: subDevice.id,
+                        cid: subDevice.node_id
+                    }));
+                }
+                return pretty;
+            }),
+            userId: foundUserId,
+            region: foundAPIRegion,
+            clientId: answers.clientId, 
+            clientSecret: answers.clientSecret
+        };
+    }
+    
+    static getContext() {
+        return Cloud.instance.context;
     }
 }
