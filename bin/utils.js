@@ -98,7 +98,7 @@ export default class Utils {
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
                 break;
             default:
-                Logger.fatal('Unsupported platform');
+                Logger.fatal(`Unsupported platform ${os.platform()}. Exiting...`);
         }
         return directory;
     }

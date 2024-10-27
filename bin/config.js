@@ -33,15 +33,8 @@ export default class Config {
     static useEnv = false;
 
     static getConfigPath() {
-        this.configPath = Utils.getApplicationDirectory()
-        switch (os.platform()) {
-            case 'win32' || 'linux' || 'darwin' || 'android':
-                this.configPath = path.join(this.configPath, CONFIG_FILE_NAME);
-                if (!fs.existsSync(this.configPath)) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
-                break;
-            default:
-                Logger.fatal('Unsupported platform');
-        }
+        this.configPath = path.join(Utils.getApplicationDirectory(), CONFIG_FILE_NAME);
+        if (!fs.existsSync(this.configPath)) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
     }
     
     static loadConfig() {
