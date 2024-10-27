@@ -57,6 +57,16 @@ export default class Utils {
             name: 'port',
             message: 'The port to run Spotify callbacks on (default: 4815):',
             prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+        },
+        {
+            name: 'colorPalette',
+            message: 'The color palette to use (-1: Cycle, 0: Vibrant, 1: DarkVibrant, 2: LightVibrant, 3: Muted, 4: DarkMuted, 5: LightMuted):',
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+        },
+        {
+            name: 'cycleRate',
+            message: 'The cycle rate in milliseconds (default: 5000):',
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
         }
     ];
     
@@ -213,6 +223,8 @@ export default class Utils {
                 Config.setRefreshRate(answers.refreshRate);
                 Config.setStartOnBoot(answers.startOnBoot === "y" || answers.startOnBoot === "yes");
                 Config.setPort(answers.port);
+                Config.setPaletteMode(answers.colorPalette);
+                Config.setCycleRate(answers.cycleRate);
                 Logger.info("Successfully saved your SpoTuya settings!");
             }
 

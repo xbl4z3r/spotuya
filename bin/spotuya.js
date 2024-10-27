@@ -1,26 +1,19 @@
 #!/usr/bin/env node
-import Cloud from "./cloud.js";
-import {SpotifyApiProvider, SpotifyPlaybackStore, SpotifyTokenStore} from "./spotify.js";
 import Vibrant from "node-vibrant";
 import chalk from "chalk";
+import inquirer from "inquirer";
+import dotenv from "dotenv";
+import Cloud from "./cloud.js";
+import {SpotifyApiProvider, SpotifyPlaybackStore, SpotifyTokenStore} from "./spotify.js";
 import Config from "./config.js";
 import Logger from "./logger.js";
 import Utils from "./utils.js";
-import inquirer from "inquirer";
 import Device from "./device.js";
 import PM2Provider from "./pm2provider.js";
 import Upgrader from "./upgrader.js";
+import PaletteProvider from "./palette.js";
 
-import dotenv from "dotenv";
 dotenv.config();
-
-/**
- * 0 - Vibrant
- * 1 - Dark Vibrant
- * 2 - Light Vibrant
- * 3 - Muted
- */
-let colorPalette = 0;
 
 console.log(chalk.hex(Utils.SPOTIFY_COLOR).bold(" .oooooo..o                      ooooooooooooo                                   \n" +
     "d8P'    `Y8                      8'   888   `8                                   \n" +
@@ -50,9 +43,9 @@ const devices = [];
     }
 
     if ((process.env.USE_ENV || "").toUpperCase() === "TRUE") Config.enableEnv();
-    
+
     Config.loadConfig();
-    if ((Config.getConfigVersion() === undefined || Config.getConfigVersion() !== Utils.getVersion()) && !args.includes("shutup") && !args.includes("update")) Logger.warn("Your configuration file is outdated and may not work properly. Please run `spotuya update` to try and update the configuration or `spotuya shutup` to dismiss this message.");
+    if (!Config.isUsingEnv() && (Config.getConfigVersion() === undefined || Config.getConfigVersion() !== Utils.getVersion()) && !args.includes("shutup") && !args.includes("upgrade")) Logger.warn("Your configuration file is outdated and may not work properly. Please run `spotuya upgrade` to try and update the configuration or `spotuya shutup` to dismiss this message.");
 
     if (args.includes("setup") || args.includes("wizard")) await Utils.handleSetup(args);
     else if (args.includes("config")) Config.handleConfigActions(args);
@@ -101,10 +94,7 @@ const devices = [];
         if (Config.getDevices().length === 0) Logger.fatal("No devices found! Make sure your configuration is correct. To set it up run `spotuya setup`.");
 
         await Cloud.initialize(Config.getTuyaConfig());
-        
-        setInterval(async () => {
-            colorPalette = (colorPalette + 1) % 4;
-        }, 5000);
+        await PaletteProvider.initialize();
 
         const configDevices = Config.getDevices();
         for (let i = 0; i < configDevices.length; i++) {
@@ -116,34 +106,54 @@ const devices = [];
                 setInterval(async () => {
                     try {
                         const data = await SpotifyApiProvider.getApi().getMyCurrentPlaybackState();
+                        
+                        if (data.body.currently_playing_type !== "track") {
+                            await device.resetDevice();
+                            await PaletteProvider.destroy();
+                            return;
+                        }
+
                         SpotifyPlaybackStore.setPlaying(data.body.is_playing);
                         if (SpotifyPlaybackStore.getPlaying()) {
+                            if (!PaletteProvider.isCycling()) PaletteProvider.initialize();
                             await Vibrant.from(data.body.item.album.images[0].url).getPalette(async (err, palette) => {
                                 let rgb;
-                                switch (colorPalette) {
-                                    case 0:
+                                switch (PaletteProvider.getPaletteMode().toString()) {
+                                    case "0":
                                         rgb = palette.Vibrant.rgb;
                                         break;
-                                    case 1:
+                                    case "1":
                                         rgb = palette.DarkVibrant.rgb;
                                         break;
-                                    case 2:
+                                    case "2":
                                         rgb = palette.LightVibrant.rgb;
                                         break;
-                                    case 3:
+                                    case "3":
                                         rgb = palette.Muted.rgb;
+                                        break;
+                                    case "4":
+                                        rgb = palette.DarkMuted.rgb;
+                                        break;
+                                    case "5":
+                                        rgb = palette.LightMuted.rgb;
+                                        break;
+                                    default:
+                                        Logger.fatal(`Invalid palette mode ${PaletteProvider.getPaletteMode()}. Please run 'spotuya help' for more information.`);
                                         break;
                                 }
                                 device.setColor(Utils.rgbToHsv(rgb));
                             })
                         } else {
                             await device.resetDevice()
+                            await PaletteProvider.destroy();
                         }
                     } catch (err) {
-                        Logger.fatal("Something went wrong while checking the current song. Check your configuration file.");
+                        Logger.error("An error occurred while updating the device.");
+                        Logger.error(err);
                     }
                 }, Config.getRefreshRate())
             );
+            
             devices.push(device);
         }
         Logger.info("Successfully loaded " + devices.length + " device(s).");
@@ -175,7 +185,6 @@ process.on('SIGTERM', async () => {
 // Handle uncaught exceptions and reset devices
 process.on('uncaughtException', async (err) => {
     Logger.error("An uncaught exception occurred. Resetting all devices...");
-    Logger.error(err);
     for (const device of devices) {
         await device.resetDevice();
         await device.destroy();

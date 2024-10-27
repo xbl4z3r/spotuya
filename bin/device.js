@@ -91,6 +91,7 @@ export default class Device {
         if (this.hasBeenReset) return;
         Logger.debug(`Resetting device ${this.name} (${this.id}) to initial state...`);
         this.hasBeenReset = true;
+        this.lastColor = null;
         await Cloud.getContext().request({
             method: 'POST',
             path: `/v1.0/devices/${this.id}/commands`,

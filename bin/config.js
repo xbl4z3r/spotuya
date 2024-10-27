@@ -1,5 +1,4 @@
 import Logger from "./logger.js";
-import os from "os";
 import path from "path";
 import fs from "fs";
 import Utils from "./utils.js";
@@ -21,10 +20,12 @@ const DEFAULT_CONFIG = {
         clientId: "",
         clientSecret: "",
     },
-    configVersion: "2.0.0",
+    configVersion: "2.0.1",
     refreshRate: 1000,
     startOnBoot: false,
     port: 4815,
+    paletteMode: 0,
+    cycleRate: 5000
 }
 
 export default class Config {
@@ -59,10 +60,12 @@ export default class Config {
                 clientId: process.env.SPOTIFY_CLIENT_ID,
                 clientSecret: process.env.SPOTIFY_CLIENT_SECRET
             },
-            configVersion: process.env.CONFIG_VERSION || "2.0.0",
+            configVersion: process.env.CONFIG_VERSION || "2.0.1",
             refreshRate: process.env.REFRESH_RATE || 1000,
             startOnBoot: process.env.START_ON_BOOT || false,
-            port: process.env.PORT || 4815
+            port: process.env.PORT || 4815,
+            paletteMode: process.env.PALETTE_MODE || 0,
+            cycleRate: process.env.CYCLE_RATE || 5000
         };
         process.env.DEVICES.split(',').forEach(device => {
             this.config.devices.push({
@@ -159,6 +162,20 @@ export default class Config {
         this.config.port = port;
         this.saveConfig();
     }
+    
+    static setPaletteMode(mode) {
+        if (this.config === {}) this.loadConfig();
+        Logger.debug(`Setting palette mode to ${mode}...`);
+        this.config.paletteMode = mode;
+        this.saveConfig();
+    }
+    
+    static setCycleRate(rate) {
+        if (this.config === {}) this.loadConfig();
+        Logger.debug(`Setting cycle rate to ${rate}...`);
+        this.config.cycleRate = rate;
+        this.saveConfig();
+    }
 
     static setValue(key, value) {
         if (this.config === {}) this.loadConfig();
@@ -203,6 +220,16 @@ export default class Config {
         if (this.config === {}) this.loadConfig();
         return this.config.port;
     }
+    
+    static getPaletteMode() {
+        if (this.config === {}) this.loadConfig();
+        return this.config.paletteMode;
+    }
+    
+    static getCycleRate() {
+        if (this.config === {}) this.loadConfig();
+        return this.config.cycleRate;
+    }
 
     static getValue(key) {
         if (this.config === {}) this.loadConfig();
@@ -230,5 +257,9 @@ export default class Config {
     
     static enableEnv() {
         this.useEnv = true;
+    }
+    
+    static isUsingEnv() {
+        return this.useEnv;
     }
 }

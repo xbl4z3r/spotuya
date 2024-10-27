@@ -1,5 +1,7 @@
 # SpoTuya
 
+[![Run on Repl.it](https://replit.com/badge/github/xbl4z3r/spotuya)](https://replit.com/new/github/xbl4z3r/spotuya)
+
 SpoTuya, formerly known as Spotify-Tuya, is a simple background process script to change the color of your Tuya lights based on the cover art
 of the song you're listening to on Spotify. It is written in JavaScript and is easy to set up. SpoTuya uses
 the [Tuya API](https://developer.tuya.com/en/docs/cloud/cloudapi?id=K9i5ql6waswzq) to control the lights and
@@ -26,7 +28,12 @@ The latest version of SpoTuya supports the following features:
 - [x] Start SpoTuya on system startup.
 - [x] Cloud API support.
 - [x] Support for multiple devices.
-- [ ] Specific color palettes. (Vibrant, Dark Vibrant, Dark Muted, Muted)
+- [x] Specific color palettes. (Vibrant, Dark Vibrant, Dark Muted, Muted)
+- [ ] Web interface.
+- [ ] Support for more devices.
+- [ ] Support for more music streaming services.
+- [ ] Support for more color palettes.
+- [ ] Support for more light effects.
 <br>
 
 ## Installation
