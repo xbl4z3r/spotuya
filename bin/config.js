@@ -3,9 +3,11 @@ import path from "path";
 import fs from "fs";
 import Utils from "./utils.js";
 import PM2Provider from "./pm2provider.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const CONFIG_FILE_NAME = 'config.json';
-
 const DEFAULT_CONFIG = {
     devices: [],
     tuya: {
