@@ -46,27 +46,38 @@ export default class Utils {
         {
             name: 'refreshRate',
             message: 'The refresh rate in milliseconds (default: 1000):',
-            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: 1000
         },
         {
             name: 'startOnBoot',
             message: 'WARNING: This will install and use PM2\nStart SpoTuya on boot (y/n):',
-            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: "n"
         },
         {
             name: 'port',
             message: 'The port to run Spotify callbacks on (default: 4815):',
-            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: 4815
         },
         {
             name: 'colorPalette',
             message: 'The color palette to use (-1: Cycle, 0: Vibrant, 1: DarkVibrant, 2: LightVibrant, 3: Muted, 4: DarkMuted, 5: LightMuted):',
-            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: 0
         },
         {
             name: 'cycleRate',
             message: 'The cycle rate in milliseconds (default: 5000):',
-            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: 5000
+        },
+        {
+            name: 'contrastOffset',
+            message: 'The contrast offset (default: 0, between -100 and 100):',
+            prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+            default: 0
         }
     ];
     
@@ -76,8 +87,8 @@ export default class Utils {
         const hsv = convert.rgb.hsv(rgb[0], rgb[1], rgb[2]);
         return { 
             h: hsv[0], 
-            s: Utils.clamp((hsv[1] + 50) * 10, 0, 1000), 
-            v: Utils.clamp((hsv[2] + 50) * 10, 0, 1000) 
+            s: Utils.clamp((hsv[1] + Config.getContrastOffset()) * 10, 0, 1000), 
+            v: Utils.clamp((hsv[2] + Config.getContrastOffset()) * 10, 0, 1000) 
         };
     }
 
@@ -225,6 +236,7 @@ export default class Utils {
                 Config.setPort(answers.port);
                 Config.setPaletteMode(answers.colorPalette);
                 Config.setCycleRate(answers.cycleRate);
+                Config.setContrastOffset(answers.contrastOffset);
                 Logger.info("Successfully saved your SpoTuya settings!");
             }
 

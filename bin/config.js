@@ -20,12 +20,13 @@ const DEFAULT_CONFIG = {
         clientId: "",
         clientSecret: "",
     },
-    configVersion: "2.0.1",
+    configVersion: "2.1.0",
     refreshRate: 1000,
     startOnBoot: false,
     port: 4815,
     paletteMode: 0,
-    cycleRate: 5000
+    cycleRate: 5000,
+    contrastOffset: 0
 }
 
 export default class Config {
@@ -60,12 +61,13 @@ export default class Config {
                 clientId: process.env.SPOTIFY_CLIENT_ID,
                 clientSecret: process.env.SPOTIFY_CLIENT_SECRET
             },
-            configVersion: process.env.CONFIG_VERSION || "2.0.1",
+            configVersion: process.env.CONFIG_VERSION || "2.1.0",
             refreshRate: process.env.REFRESH_RATE || 1000,
             startOnBoot: process.env.START_ON_BOOT || false,
             port: process.env.PORT || 4815,
             paletteMode: process.env.PALETTE_MODE || 0,
-            cycleRate: process.env.CYCLE_RATE || 5000
+            cycleRate: process.env.CYCLE_RATE || 5000,
+            contrastOffset: process.env.CONTRAST_OFFSET || 0
         };
         process.env.DEVICES.split(',').forEach(device => {
             this.config.devices.push({
@@ -176,6 +178,13 @@ export default class Config {
         this.config.cycleRate = rate;
         this.saveConfig();
     }
+    
+    static setContrastOffset(offset) {
+        if (this.config === {}) this.loadConfig();
+        Logger.debug(`Setting contrast offset to ${offset}...`);
+        this.config.contrastOffset = offset;
+        this.saveConfig();
+    }
 
     static setValue(key, value) {
         if (this.config === {}) this.loadConfig();
@@ -229,6 +238,11 @@ export default class Config {
     static getCycleRate() {
         if (this.config === {}) this.loadConfig();
         return this.config.cycleRate;
+    }
+    
+    static getContrastOffset() {
+        if (this.config === {}) this.loadConfig();
+        return this.config.contrastOffset;
     }
 
     static getValue(key) {

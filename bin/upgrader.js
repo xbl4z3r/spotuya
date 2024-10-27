@@ -33,6 +33,15 @@ export default class Upgrader {
                 ]);
                 Config.setPaletteMode(answers.colorPalette);
                 Config.setRefreshRate(answers.cycleRate);
+            case "2.0.1":
+                const answer = await inquirer.prompt([
+                    {
+                        name: 'contrastOffset',
+                        message: 'The contrast offset to apply to the color palette (between -100 and 100):',
+                        prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+                    }
+                ]);
+                Config.setContrastOffset(answer.contrastOffset);
         }
         Config.setConfigVersion(Utils.getVersion());
         Logger.info("Successfully updated configuration to v" + Utils.getVersion() + ".");

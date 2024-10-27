@@ -15,7 +15,7 @@ export default class PaletteProvider {
             this.paletteMode = 0;
             this.interval = setInterval(() => {
                 this.paletteMode = (this.paletteMode + 1) % 6;
-            }, Config.getRefreshRate());
+            }, Config.getCycleRate());
         }
     }
 

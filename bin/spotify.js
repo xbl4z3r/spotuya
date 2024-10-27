@@ -1,5 +1,4 @@
 import open from "open";
-import express from "express";
 import request from "request";
 
 import Logger from "./logger.js";
@@ -8,77 +7,17 @@ import SpotifyWebApi from "spotify-web-api-node";
 import Config from "./config.js";
 
 const PORT = Config.getPort();
+const REDIRECT_URI = 'http://localhost:' + PORT + '/callback'
 const SCOPE = [
     'user-read-playback-state',
     'user-read-currently-playing',
 ].join('%20')
-
-const REDIRECT_URI = 'http://localhost:' + PORT + '/callback'
-
-const app = express()
-
-app.get('/callback', (req, res) => {
-    const code = req.query.code || null;
-    const state = req.query.state || null;
-
-    if (state === null) {
-        Logger.error("State is null");
-    } else {
-        const authOptions = {
-            url: 'https://accounts.spotify.com/api/token',
-            form: {
-                code: code,
-                redirect_uri: REDIRECT_URI,
-                grant_type: 'authorization_code'
-            },
-            headers: {
-                'Authorization': 'Basic ' + (new Buffer.from(SpotifyTokenStore.CLIENT_ID + ':' + SpotifyTokenStore.CLIENT_SECRET).toString('base64'))
-            },
-            json: true
-        };
-
-        request.post(authOptions, function (error, response, body) {
-            if (!error && response.statusCode === 200) {
-                const access_token = body.access_token,
-                    refresh_token = body.refresh_token;
-
-                res.redirect('/token' +
-                    '?access_token=' + access_token +
-                    '&refresh_token=' + refresh_token);
-            } else {
-                Logger.fatal("Error while getting access token. Check your config file and try again.");
-            }
-        });
-    }
-})
-
-app.get('/token', (req, res) => {
-    const accessToken = req.query.access_token
-    const refreshToken = req.query.refresh_token
-    if (refreshToken) SpotifyTokenStore.refreshToken = refreshToken
-    if (accessToken) SpotifyTokenStore.accessToken = accessToken;
-    res.send('<script>window.close()</script>')
-})
 
 export class SpotifyTokenStore {
     static CLIENT_ID = "";
     static CLIENT_SECRET = "";
     static accessToken = "";
     static refreshToken = "";
-
-    static async setup() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                app.listen(PORT, () => {
-                    Logger.debug("Started callback server on port " + PORT);
-                    resolve();
-                });
-            } catch (e) {
-                Logger.fatal("Error while setting up callback server... Make sure port " + PORT + " is not in use and try again.");
-                reject();
-            }
-        })
-    }
 
     static async getAccessToken() {
         return new Promise(async (resolve) => {
@@ -143,9 +82,54 @@ export class SpotifyTokenStore {
 
 export class SpotifyPlaybackStore {
     static isPlaying = false;
+    static songName = "";
+    static artistName = "";
+    static albumName = "";
+    static imageUrl = "";
+    static progress = 0;
     
     static setPlaying(playing) {
         this.isPlaying = playing;
+    }
+    
+    static setSongName(songName) {
+        this.songName = songName;
+    }
+    
+    static setArtistName(artistName) {
+        this.artistName = artistName;
+    }
+    
+    static setAlbumName(albumName) {
+        this.albumName = albumName;
+    }
+    
+    static setImageUrl(imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+    
+    static setProgress(progress) {
+        this.progress = progress;
+    }
+    
+    static getSongName() {
+        return this.songName;
+    }
+    
+    static getArtistName() {
+        return this.artistName;
+    }
+    
+    static getAlbumName() {
+        return this.albumName;
+    }
+    
+    static getImageUrl() {
+        return this.imageUrl;
+    }
+    
+    static getProgress() {
+        return this.progress;
     }
     
     static getPlaying() {

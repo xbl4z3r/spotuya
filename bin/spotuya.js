@@ -12,6 +12,7 @@ import Device from "./device.js";
 import PM2Provider from "./pm2provider.js";
 import Upgrader from "./upgrader.js";
 import PaletteProvider from "./palette.js";
+import {StateController, WebserverProvider} from "./webserver.js";
 
 dotenv.config();
 
@@ -81,7 +82,7 @@ const devices = [];
         if (spotifyConfig.refreshToken.length > 5) SpotifyTokenStore.setRefreshToken(spotifyConfig.refreshToken);
         SpotifyTokenStore.setClientId(spotifyConfig.clientId);
         SpotifyTokenStore.setClientSecret(spotifyConfig.clientSecret);
-        await SpotifyTokenStore.setup();
+        await WebserverProvider.initialize();
         let tokens = await SpotifyTokenStore.getAccessToken(spotifyConfig.clientId);
         spotifyConfig.accessToken = tokens.accessToken;
         if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
@@ -104,6 +105,11 @@ const devices = [];
 
             device.setInterval(
                 setInterval(async () => {
+                    if (StateController.isEnabled() === false) {
+                        await device.resetDevice();
+                        return;
+                    }
+                    
                     try {
                         const data = await SpotifyApiProvider.getApi().getMyCurrentPlaybackState();
                         
@@ -114,6 +120,12 @@ const devices = [];
                         }
 
                         SpotifyPlaybackStore.setPlaying(data.body.is_playing);
+                        SpotifyPlaybackStore.setSongName(data.body.item.name);
+                        SpotifyPlaybackStore.setArtistName(data.body.item.artists[0].name);
+                        SpotifyPlaybackStore.setAlbumName(data.body.item.album.name);
+                        SpotifyPlaybackStore.setImageUrl(data.body.item.album.images[0].url);
+                        SpotifyPlaybackStore.setProgress(data.body.progress_ms / data.body.item.duration_ms * 100);
+                        
                         if (SpotifyPlaybackStore.getPlaying()) {
                             if (!PaletteProvider.isCycling()) PaletteProvider.initialize();
                             await Vibrant.from(data.body.item.album.images[0].url).getPalette(async (err, palette) => {
