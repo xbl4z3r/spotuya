@@ -49,7 +49,7 @@ const devices = [];
         Logger.debug("Debug mode enabled.");
     }
 
-    if (process.env.USE_ENV.toUpperCase() === "TRUE") Config.enableEnv();
+    if ((process.env.USE_ENV || "").toUpperCase() === "TRUE") Config.enableEnv();
     
     Config.loadConfig();
     if ((Config.getConfigVersion() === undefined || Config.getConfigVersion() !== Utils.getVersion()) && !args.includes("shutup") && !args.includes("update")) Logger.warn("Your configuration file is outdated and may not work properly. Please run `spotuya update` to try and update the configuration or `spotuya shutup` to dismiss this message.");
