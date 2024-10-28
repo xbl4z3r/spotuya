@@ -100,26 +100,37 @@ export default class Utils {
     }
 
     static getApplicationDirectory() {
-        let directory;
-        switch (os.platform()) {
-            case 'win32':
-                directory = path.join(process.env.APPDATA, 'spotuya');
+        let directory = "";
+        try {
+            switch (os.platform()) {
+                case 'win32':
+                    directory = path.join(process.env.APPDATA, 'spotuya');
+                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+                    break;
+                case 'linux':
+                    directory = path.join(os.homedir(), '.config', 'spotuya');
+                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+                    break;
+                case 'darwin':
+                    directory = path.join(os.homedir(), 'Library', 'Application Support', 'spotuya');
+                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+                    break;
+                case "android":
+                    directory = path.join(os.homedir(), 'spotuya');
+                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+                    break;
+                default:
+                    Logger.fatal(`Unsupported platform ${os.platform()}. Exiting...`);
+            }
+        } catch (err) {
+            try {
+                Logger.warn(`Error while getting application directory system-wide: ${err}`);
+                Logger.warn("Falling back to local directory...");
+                directory = path.join(__dirname, '..', 'config');
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                break;
-            case 'linux':
-                directory = path.join(os.homedir(), '.config', 'spotuya');
-                if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                break;
-            case 'darwin':
-                directory = path.join(os.homedir(), 'Library', 'Application Support', 'spotuya');
-                if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                break;
-            case "android":
-                directory = path.join(os.homedir(), 'spotuya');
-                if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                break;
-            default:
-                Logger.fatal(`Unsupported platform ${os.platform()}. Exiting...`);
+            } catch (err) {
+                Logger.warn("Unable to create local directory. Do you have write permissions?");
+            }
         }
         return directory;
     }

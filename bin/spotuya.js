@@ -197,7 +197,8 @@ process.on('SIGTERM', async () => {
 // Handle uncaught exceptions and reset devices
 process.on('uncaughtException', async (err) => {
     Logger.error("An uncaught exception occurred. Resetting all devices...");
-    Logger.error(err);
+    Logger.error(err.message);
+    Logger.error(err.stack);
     for (const device of devices) {
         await device.resetDevice();
         await device.destroy();
