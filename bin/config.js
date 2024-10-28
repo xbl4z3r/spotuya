@@ -41,7 +41,7 @@ export default class Config {
         if (!fs.existsSync(this.configPath)) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
     }
     
-    static loadConfig() {
+    static initialize() {
         const startTime = new Date().getTime();
         if (this.useEnv) this.loadConfigFromEnv();
         else this.loadConfigFromDisk();

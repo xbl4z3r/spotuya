@@ -34,7 +34,7 @@ const nonFlagArgs = args.filter(arg => !arg.startsWith("--"));
 const devices = [];
 
 (async () => {
-    Logger.initLogFile();
+    Logger.initialize();
 
     if (nonFlagArgs.length === 0) return Logger.fatal("No arguments provided. Please run `spotuya help` for more information.");
 
@@ -45,7 +45,7 @@ const devices = [];
 
     if ((process.env.USE_ENV || "").toUpperCase() === "TRUE") Config.enableEnv();
 
-    Config.loadConfig();
+    Config.initialize();
     if (!Config.isUsingEnv() && (Config.getConfigVersion() === undefined || Config.getConfigVersion() !== Utils.getVersion()) && !args.includes("shutup") && !args.includes("upgrade")) Logger.warn("Your configuration file is outdated and may not work properly. Please run `spotuya upgrade` to try and update the configuration or `spotuya shutup` to dismiss this message.");
 
     if (args.includes("setup") || args.includes("wizard")) await Utils.handleSetup(args);
@@ -83,7 +83,7 @@ const devices = [];
         SpotifyTokenStore.setClientId(spotifyConfig.clientId);
         SpotifyTokenStore.setClientSecret(spotifyConfig.clientSecret);
         await WebserverProvider.initialize();
-        let tokens = await SpotifyTokenStore.getAccessToken(spotifyConfig.clientId);
+        let tokens = await SpotifyTokenStore.getAccessToken();
         spotifyConfig.accessToken = tokens.accessToken;
         if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
         Config.setSpotifyConfig(spotifyConfig);
@@ -109,10 +109,10 @@ const devices = [];
                         await device.resetDevice();
                         return;
                     }
-                    
+
                     try {
                         const data = await SpotifyApiProvider.getApi().getMyCurrentPlaybackState();
-                        
+
                         if (data.body.currently_playing_type !== "track") {
                             await device.resetDevice();
                             await PaletteProvider.destroy();
@@ -125,7 +125,7 @@ const devices = [];
                         SpotifyPlaybackStore.setAlbumName(data.body.item.album.name);
                         SpotifyPlaybackStore.setImageUrl(data.body.item.album.images[0].url);
                         SpotifyPlaybackStore.setProgress(data.body.progress_ms / data.body.item.duration_ms * 100);
-                        
+
                         if (SpotifyPlaybackStore.getPlaying()) {
                             if (!PaletteProvider.isCycling()) PaletteProvider.initialize();
                             await Vibrant.from(data.body.item.album.images[0].url).getPalette(async (err, palette) => {
@@ -160,12 +160,20 @@ const devices = [];
                             await PaletteProvider.destroy();
                         }
                     } catch (err) {
-                        Logger.error("An error occurred while updating the device.");
-                        Logger.error(err);
+
+                        if (!err.message.includes("WebapiRegularError")) {
+                            Logger.error("An error occurred while updating the device.");
+                            Logger.error(err);
+                            return;
+                        }
+                        const tokens = await SpotifyTokenStore.getAccessToken();
+                        spotifyConfig.accessToken = tokens.accessToken;
+                        if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
+                        Config.setSpotifyConfig(spotifyConfig);
                     }
                 }, Config.getRefreshRate())
             );
-            
+
             devices.push(device);
         }
         Logger.info("Successfully loaded " + devices.length + " device(s).");

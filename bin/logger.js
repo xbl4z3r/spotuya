@@ -7,13 +7,18 @@ export default class Logger {
     static debugMode = false;
     static logFilePath = "not_initialized";
 
-    static initLogFile() {
+    static initialize() {
         const date = new Date();
-        const logFileName = `SpoTuya-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.log`;
-        if (!fs.existsSync(path.join(Utils.getApplicationDirectory(), "logs"))) fs.mkdirSync(path.join(Utils.getApplicationDirectory(), "logs"));
-        const logFilePath = path.join(Utils.getApplicationDirectory(), "logs", logFileName);
-        if (!fs.existsSync(logFilePath)) fs.writeFileSync(logFilePath, "");
-        this.logFilePath = logFilePath;
+        try {
+            const logFileName = `SpoTuya-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.log`;
+            if (!fs.existsSync(path.join(Utils.getApplicationDirectory(), "logs"))) fs.mkdirSync(path.join(Utils.getApplicationDirectory(), "logs"));
+            const logFilePath = path.join(Utils.getApplicationDirectory(), "logs", logFileName);
+            if (!fs.existsSync(logFilePath)) fs.writeFileSync(logFilePath, "");
+            this.logFilePath = logFilePath;
+        } catch (e) {
+            this.error("Failed to initialize log file: " + e);
+            this.logFilePath = "not_initialized";
+        }
     }
 
     static info(message) {
