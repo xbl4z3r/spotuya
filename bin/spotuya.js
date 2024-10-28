@@ -160,8 +160,7 @@ const devices = [];
                             await PaletteProvider.destroy();
                         }
                     } catch (err) {
-
-                        if (!err.message.includes("WebapiRegularError")) {
+                        if (!err.includes("WebapiRegularError")) {
                             Logger.error("An error occurred while updating the device.");
                             Logger.error(err);
                             return;
