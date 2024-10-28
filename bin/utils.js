@@ -9,6 +9,7 @@ import Config from "./config.js";
 import Cloud from "./cloud.js";
 import inquirer from "inquirer";
 import {SpotifyTokenStore} from "./spotify.js";
+import {WebserverProvider} from "./webserver.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -231,7 +232,7 @@ export default class Utils {
                 Config.setSpotifyConfig(spotifyConfig);
                 SpotifyTokenStore.setClientId(spotifyConfig.clientId);
                 SpotifyTokenStore.setClientSecret(spotifyConfig.clientSecret);
-                await SpotifyTokenStore.setup();
+                await WebserverProvider.initialize();
                 let tokens = await SpotifyTokenStore.getAccessToken();
                 spotifyConfig.accessToken = tokens.access_token;
                 if (tokens.refresh_token) spotifyConfig.refreshToken = tokens.refresh_token;

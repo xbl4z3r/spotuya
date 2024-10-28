@@ -106,7 +106,7 @@ export default class Config {
     }
 
     static addDevice(device) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         let exists = false;
         this.config.devices.forEach(d => {
             if (d.id === device.id) exists = true;
@@ -124,14 +124,14 @@ export default class Config {
     }
     
     static setTuyaConfig(config) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting tuya config...`);
         this.config.tuya = config;
         this.saveConfig();
     }
     
     static setStartOnBoot(value) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting start on boot to ${value}...`);
         this.config.startOnBoot = value;
         if (value) PM2Provider.createTask();
@@ -140,56 +140,56 @@ export default class Config {
     }
 
     static setRefreshRate(value) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting refresh rate to ${value}...`);
         this.config.refreshRate = value;
         this.saveConfig();
     }
 
     static setConfigVersion(version) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting config version to ${version}...`);
         this.config.configVersion = version;
         this.saveConfig();
     }
 
     static setSpotifyConfig(config) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting spotify config...`);
         this.config.spotify = config;
         this.saveConfig();
     }
     
     static setPort(port) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting port to ${port}...`);
         this.config.port = port;
         this.saveConfig();
     }
     
     static setPaletteMode(mode) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting palette mode to ${mode}...`);
         this.config.paletteMode = mode;
         this.saveConfig();
     }
     
     static setCycleRate(rate) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting cycle rate to ${rate}...`);
         this.config.cycleRate = rate;
         this.saveConfig();
     }
     
     static setContrastOffset(offset) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting contrast offset to ${offset}...`);
         this.config.contrastOffset = offset;
         this.saveConfig();
     }
 
     static setValue(key, value) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         Logger.debug(`Setting ${key} to ${value}...`);
         this.config[key] = value;
         if (key === 'startOnBoot' && value) PM2Provider.createTask();
@@ -198,57 +198,57 @@ export default class Config {
     }
 
     static getConfigVersion() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.configVersion;
     }
 
     static getRefreshRate() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.refreshRate;
     }
 
     static getDevices() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.devices;
     }
 
     static getTuyaConfig() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.tuya;
     }
 
     static getSpotifyConfig() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.spotify;
     }
 
     static getStartOnBoot() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.startOnBoot;
     }
     
     static getPort() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.port;
     }
     
     static getPaletteMode() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.paletteMode;
     }
     
     static getCycleRate() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.cycleRate;
     }
     
     static getContrastOffset() {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config.contrastOffset;
     }
 
     static getValue(key) {
-        if (this.config === {}) this.loadConfig();
+        if (this.config === {}) this.initialize();
         return this.config[key];
     }
     
