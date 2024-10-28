@@ -160,11 +160,7 @@ const devices = [];
                             await PaletteProvider.destroy();
                         }
                     } catch (err) {
-                        if (!err.includes("WebapiRegularError")) {
-                            Logger.error("An error occurred while updating the device.");
-                            Logger.error(err);
-                            return;
-                        }
+                        // Most likely a 401 error, so we need to refresh the token
                         const tokens = await SpotifyTokenStore.getAccessToken();
                         spotifyConfig.accessToken = tokens.accessToken;
                         if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
