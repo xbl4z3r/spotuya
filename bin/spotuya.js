@@ -165,6 +165,7 @@ const devices = [];
                         spotifyConfig.accessToken = tokens.accessToken;
                         if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
                         Config.setSpotifyConfig(spotifyConfig);
+                        SpotifyApiProvider.setAccessToken(tokens.accessToken);
                     }
                 }, Config.getRefreshRate())
             );
