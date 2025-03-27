@@ -1,25 +1,40 @@
 import Logger from "./logger.js";
 import Cloud from "./cloud.js";
+import {DeviceData, CommandData} from "../@types/types";
 
 export default class Device {
-    id
-    name
-    key
-    initialState
-    lastColor = null;
-    hasBeenReset = false
-    interval = null;
+    id: string
+    name: string
+    key: string
+    initialState: CommandData
+    lastColor: {
+        h: number,
+        s: number,
+        v: number,
+    } | null = null;
+    hasBeenReset: boolean = false
+    interval: NodeJS.Timeout | null = null;
 
-    constructor(deviceData) {
+    constructor(deviceData: DeviceData) {
         this.id = deviceData.id;
         this.name = deviceData.name;
         this.key = deviceData.key;
         this.hasBeenReset = false;
+        this.initialState = {
+            powered: {
+                code: '',
+                value: false,
+            },
+            color: {
+                code: '',
+                value: '',
+            },
+        }
     }
 
     async initialize() {
         this.hasBeenReset = false;
-        
+
         const response = await Cloud.getContext().request({
             method: 'GET',
             path: `/v1.0/devices/${this.id}/status`,
@@ -45,7 +60,7 @@ export default class Device {
                 },
             });
         }
-        
+
         this.initialState = {
             powered: {
                 code: response.result[0].code,
@@ -56,15 +71,19 @@ export default class Device {
                 value: JSON.parse(response.result[2].value),
             },
         };
-        
+
         Logger.debug(`Device ${this.name} (${this.id}) initialized with state: ${JSON.stringify(this.initialState)}`);
     }
-    
-    setInterval(interval) {
+
+    setInterval(interval: NodeJS.Timeout) {
         this.interval = interval;
     }
 
-    setColor(color) {
+    setColor(color: {
+        h: number,
+        s: number,
+        v: number,
+    }) {
         this.hasBeenReset = false;
         if (JSON.stringify(this.lastColor) === JSON.stringify(color)) return;
         this.lastColor = color;
@@ -109,7 +128,7 @@ export default class Device {
             },
         });
     }
-    
+
     async destroy() {
         if (this.interval) clearInterval(this.interval);
     }

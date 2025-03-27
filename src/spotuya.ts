@@ -13,6 +13,7 @@ import PM2Provider from "./pm2provider.js";
 import Upgrader from "./upgrader.js";
 import PaletteProvider from "./palette.js";
 import {StateController, WebserverProvider} from "./webserver.js";
+import {DeviceData} from "../@types/types";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ console.log(chalk.white.bold("> Made with " + chalk.red("♥") + " by " + chalk.
 const args = process.argv.slice(2);
 const nonFlagArgs = args.filter(arg => !arg.startsWith("--"));
 
-const devices = [];
+const devices: DeviceData[] = [];
 
 (async () => {
     Logger.initialize();
@@ -84,8 +85,8 @@ const devices = [];
         SpotifyTokenStore.setClientSecret(spotifyConfig.clientSecret);
         await WebserverProvider.initialize();
         let tokens = await SpotifyTokenStore.getAccessToken();
-        spotifyConfig.accessToken = tokens.accessToken;
-        if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
+        spotifyConfig.accessToken = tokens.access_token;
+        if (tokens.refresh_token) spotifyConfig.refreshToken = tokens.refresh_token;
         Config.setSpotifyConfig(spotifyConfig);
         Logger.info("Successfully logged in to Spotify.");
 
@@ -95,7 +96,7 @@ const devices = [];
         if (Config.getDevices().length === 0) Logger.fatal("No devices found! Make sure your configuration is correct. To set it up run `spotuya setup`.");
 
         await Cloud.initialize(Config.getTuyaConfig());
-        await PaletteProvider.initialize();
+        PaletteProvider.initialize();
 
         const configDevices = Config.getDevices();
         for (let i = 0; i < configDevices.length; i++) {
@@ -105,7 +106,7 @@ const devices = [];
 
             device.setInterval(
                 setInterval(async () => {
-                    if (StateController.isEnabled() === false) {
+                    if (!StateController.isEnabled()) {
                         await device.resetDevice();
                         return;
                     }
@@ -120,33 +121,46 @@ const devices = [];
                         }
 
                         SpotifyPlaybackStore.setPlaying(data.body.is_playing);
+                        // @ts-ignore
                         SpotifyPlaybackStore.setSongName(data.body.item.name);
+                        // @ts-ignore
                         SpotifyPlaybackStore.setArtistName(data.body.item.artists[0].name);
+                        // @ts-ignore
                         SpotifyPlaybackStore.setAlbumName(data.body.item.album.name);
+                        // @ts-ignore
                         SpotifyPlaybackStore.setImageUrl(data.body.item.album.images[0].url);
+                        // @ts-ignore
                         SpotifyPlaybackStore.setProgress(data.body.progress_ms / data.body.item.duration_ms * 100);
 
                         if (SpotifyPlaybackStore.getPlaying()) {
                             if (!PaletteProvider.isCycling()) PaletteProvider.initialize();
+                            // @ts-ignore
                             await Vibrant.from(data.body.item.album.images[0].url).getPalette(async (err, palette) => {
-                                let rgb;
+                                let rgb = [0, 0, 0];
+                                if(palette == null) return;
                                 switch (PaletteProvider.getPaletteMode().toString()) {
                                     case "0":
+                                        if (palette.Vibrant == null) return;
                                         rgb = palette.Vibrant.rgb;
                                         break;
                                     case "1":
+                                        if (palette.DarkVibrant == null) return;
                                         rgb = palette.DarkVibrant.rgb;
                                         break;
                                     case "2":
+                                        if (palette.LightVibrant == null) return;
                                         rgb = palette.LightVibrant.rgb;
                                         break;
                                     case "3":
+                                        if (palette.Muted == null) return;
                                         rgb = palette.Muted.rgb;
                                         break;
                                     case "4":
+                                        if (palette.DarkMuted == null) return;
                                         rgb = palette.DarkMuted.rgb;
                                         break;
                                     case "5":
+                                        if (palette.LightMuted == null) return;
                                         rgb = palette.LightMuted.rgb;
                                         break;
                                     default:
@@ -162,10 +176,10 @@ const devices = [];
                     } catch (err) {
                         // Most likely a 401 error, so we need to refresh the token
                         const tokens = await SpotifyTokenStore.getAccessToken();
-                        spotifyConfig.accessToken = tokens.accessToken;
-                        if (tokens.refreshToken) spotifyConfig.refreshToken = tokens.refreshToken;
+                        spotifyConfig.accessToken = tokens.access_token;
+                        if (tokens.refresh_token) spotifyConfig.refreshToken = tokens.refresh_token;
                         Config.setSpotifyConfig(spotifyConfig);
-                        SpotifyApiProvider.setAccessToken(tokens.accessToken);
+                        SpotifyApiProvider.setAccessToken(tokens.access_token);
                     }
                 }, Config.getRefreshRate())
             );
@@ -180,8 +194,10 @@ const devices = [];
 process.on('SIGINT', async () => {
     Logger.warn("Process has been interrupted. Resetting all devices...");
     for (const device of devices) {
-        await device.resetDevice();
-        await device.destroy();
+        if(device.resetDevice != undefined && device.destroy != undefined) {
+            await device.resetDevice();
+            await device.destroy();
+        }
     }
     Logger.info("Successfully reset all devices. Exiting...");
     process.exit(0);
@@ -191,8 +207,10 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
     Logger.warn("Process has been terminated. Resetting all devices...");
     for (const device of devices) {
-        await device.resetDevice();
-        await device.destroy();
+        if(device.resetDevice != undefined && device.destroy != undefined) {
+            await device.resetDevice();
+            await device.destroy();
+        }
     }
     Logger.info("Successfully reset all devices. Exiting...");
     process.exit(0);
@@ -204,8 +222,10 @@ process.on('uncaughtException', async (err) => {
     Logger.error(err.message);
     Logger.error(err.stack);
     for (const device of devices) {
-        await device.resetDevice();
-        await device.destroy();
+        if(device.resetDevice != undefined && device.destroy != undefined) {
+            await device.resetDevice();
+            await device.destroy();
+        }
     }
     Logger.error("Successfully reset all devices. Exiting...");
     process.exit(1);

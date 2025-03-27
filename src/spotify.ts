@@ -6,8 +6,6 @@ import Utils from "./utils.js";
 import SpotifyWebApi from "spotify-web-api-node";
 import Config from "./config.js";
 
-const PORT = Config.getPort();
-const REDIRECT_URI = 'http://localhost:' + PORT + '/callback'
 const SCOPE = [
     'user-read-playback-state',
     'user-read-currently-playing',
@@ -19,7 +17,10 @@ export class SpotifyTokenStore {
     static accessToken = "";
     static refreshToken = "";
 
-    static async getAccessToken() {
+    static async getAccessToken(): Promise<{
+        access_token: string,
+        refresh_token: string
+    }> {
         return new Promise(async (resolve) => {
             if (this.refreshToken.length > 5) {
                 Logger.debug("Logging in with refresh token...");
@@ -37,8 +38,8 @@ export class SpotifyTokenStore {
                         SpotifyTokenStore.accessToken = body.access_token;
                         if (body.refresh_token) SpotifyTokenStore.refreshToken = body.refresh_token
                         const response = {
-                            accessToken: SpotifyTokenStore.accessToken,
-                            refreshToken: SpotifyTokenStore.refreshToken
+                            access_token: SpotifyTokenStore.accessToken,
+                            refresh_token: SpotifyTokenStore.refreshToken
                         }
                         resolve(response);
                     }
@@ -50,15 +51,15 @@ export class SpotifyTokenStore {
                     + '&response_type=code'
                     + '&scope=' + SCOPE
                     + '&show_dialog=' + false
-                    + '&redirect_uri=' + REDIRECT_URI
+                    + '&redirect_uri=' + 'http://localhost:' + Config.getPort() + '/callback'
                     + '&state=' + Utils.generateRandomString(16)
                 );
                 const interval = setInterval(() => {
                     if (this.accessToken.length > 5) {
                         clearInterval(interval);
                         const response = {
-                            accessToken: this.accessToken,
-                            refreshToken: this.refreshToken
+                            access_token: this.accessToken,
+                            refresh_token: this.refreshToken
                         }
                         resolve(response);
                     }
@@ -67,15 +68,15 @@ export class SpotifyTokenStore {
         })
     }
 
-    static setClientId(clientId) {
+    static setClientId(clientId: string) {
         this.CLIENT_ID = clientId;
     }
 
-    static setClientSecret(clientSecret) {
+    static setClientSecret(clientSecret: string) {
         this.CLIENT_SECRET = clientSecret;
     }
 
-    static setRefreshToken(refreshToken) {
+    static setRefreshToken(refreshToken: string) {
         this.refreshToken = refreshToken;
     }
 }
@@ -87,74 +88,77 @@ export class SpotifyPlaybackStore {
     static albumName = "";
     static imageUrl = "";
     static progress = 0;
-    
-    static setPlaying(playing) {
+
+    static setPlaying(playing: boolean) {
         this.isPlaying = playing;
     }
-    
-    static setSongName(songName) {
+
+    static setSongName(songName: string) {
         this.songName = songName;
     }
-    
-    static setArtistName(artistName) {
+
+    static setArtistName(artistName: string) {
         this.artistName = artistName;
     }
-    
-    static setAlbumName(albumName) {
+
+    static setAlbumName(albumName: string) {
         this.albumName = albumName;
     }
-    
-    static setImageUrl(imageUrl) {
+
+    static setImageUrl(imageUrl: string) {
         this.imageUrl = imageUrl;
     }
-    
-    static setProgress(progress) {
+
+    static setProgress(progress: number) {
         this.progress = progress;
     }
-    
+
     static getSongName() {
         return this.songName;
     }
-    
+
     static getArtistName() {
         return this.artistName;
     }
-    
+
     static getAlbumName() {
         return this.albumName;
     }
-    
+
     static getImageUrl() {
         return this.imageUrl;
     }
-    
+
     static getProgress() {
         return this.progress;
     }
-    
+
     static getPlaying() {
         return this.isPlaying;
     }
 }
 
 export class SpotifyApiProvider {
-    spotifyApi
+    spotifyApi: SpotifyWebApi | null = null;
     static instance = new SpotifyApiProvider();
-    
-    static initialize(clientId, clientSecret, accessToken = null) {
+
+    static initialize(clientId: string, clientSecret: string, accessToken: string | null = null) {
         SpotifyApiProvider.instance.spotifyApi = new SpotifyWebApi({
             clientId: clientId,
             clientSecret: clientSecret,
+            // @ts-ignore
             scope: 'user-read-currently-playing user-read-playback-state',
         });
         if (accessToken) SpotifyApiProvider.setAccessToken(accessToken);
     }
-    
-    static setAccessToken(accessToken) {
-        SpotifyApiProvider.instance.spotifyApi.setAccessToken(accessToken);
+
+    static setAccessToken(accessToken: string) {
+        if(SpotifyApiProvider.instance.spotifyApi) SpotifyApiProvider.instance.spotifyApi.setAccessToken(accessToken);
+        else Logger.error("Spotify API not initialized");
     }
-    
-    static getApi() {
-        return SpotifyApiProvider.instance.spotifyApi;
+
+    static getApi(): SpotifyWebApi {
+        if(!SpotifyApiProvider.instance.spotifyApi) Logger.error("Spotify API not initialized");
+        return SpotifyApiProvider.instance.spotifyApi as SpotifyWebApi;
     }
 }

@@ -10,6 +10,8 @@ import Cloud from "./cloud.js";
 import inquirer from "inquirer";
 import {SpotifyTokenStore} from "./spotify.js";
 import {WebserverProvider} from "./webserver.js";
+import {DeviceData} from "../@types/types";
+import {getApplicationDirectory} from "./paths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,19 +83,19 @@ export default class Utils {
             default: 0
         }
     ];
-    
-    static clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-    
-    static rgbToHsv = (rgb) => {
+
+    static clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+
+    static rgbToHsv = (rgb: number[]) => {
         const hsv = convert.rgb.hsv(rgb[0], rgb[1], rgb[2]);
-        return { 
-            h: hsv[0], 
-            s: Utils.clamp((hsv[1] + Config.getContrastOffset()) * 10, 0, 1000), 
-            v: Utils.clamp((hsv[2] + Config.getContrastOffset()) * 10, 0, 1000) 
+        return {
+            h: hsv[0],
+            s: Utils.clamp((hsv[1] + Config.getContrastOffset()) * 10, 0, 1000),
+            v: Utils.clamp((hsv[2] + Config.getContrastOffset()) * 10, 0, 1000)
         };
     }
 
-    static generateRandomString(length) {
+    static generateRandomString(length: number) {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         for (let i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
@@ -101,39 +103,7 @@ export default class Utils {
     }
 
     static getApplicationDirectory() {
-        let directory = "";
-        try {
-            switch (os.platform()) {
-                case 'win32':
-                    directory = path.join(process.env.APPDATA, 'spotuya');
-                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                    break;
-                case 'linux':
-                    directory = path.join(os.homedir(), '.config', 'spotuya');
-                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                    break;
-                case 'darwin':
-                    directory = path.join(os.homedir(), 'Library', 'Application Support', 'spotuya');
-                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                    break;
-                case "android":
-                    directory = path.join(os.homedir(), 'spotuya');
-                    if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                    break;
-                default:
-                    Logger.fatal(`Unsupported platform ${os.platform()}. Exiting...`);
-            }
-        } catch (err) {
-            try {
-                Logger.warn(`Error while getting application directory system-wide: ${err}`);
-                Logger.warn("Falling back to local directory...");
-                directory = path.join(__dirname, '..', 'config');
-                if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-            } catch (err) {
-                Logger.warn("Unable to create local directory. Do you have write permissions?");
-            }
-        }
-        return directory;
+        return getApplicationDirectory();
     }
 
     static getVersion() {
@@ -194,7 +164,7 @@ export default class Utils {
 
     static listDevices = () => {
         Logger.info("Devices in your configuration file:");
-        Config.getDevices().forEach((device, index) => {
+        Config.getDevices().forEach((device: DeviceData, index: number) => {
             Logger.info("Device " + (index + 1) + ": ID " + device.id + " | Key " + device.key);
         });
     }
@@ -205,7 +175,7 @@ export default class Utils {
         Logger.info("Disabled the config warning.");
     }
 
-    static handleSetup = async (args) => {
+    static handleSetup = async (args: string[]) => {
         const flagArgs = args.filter(arg => arg.startsWith("--"));
         try {
             // Determine what setup steps to run

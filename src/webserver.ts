@@ -4,9 +4,6 @@ import Logger from "./logger.js";
 import request from "request";
 import {SpotifyPlaybackStore, SpotifyTokenStore} from "./spotify.js";
 
-const PORT = Config.getPort() || process.env.PORT || 4815;
-const REDIRECT_URI = 'http://localhost:' + PORT + '/callback'
-
 const app = express()
 
 app.get('/callback', (req, res) => {
@@ -16,14 +13,16 @@ app.get('/callback', (req, res) => {
     if (state === null) {
         Logger.error("State is null");
     } else {
+
         const authOptions = {
             url: 'https://accounts.spotify.com/api/token',
             form: {
                 code: code,
-                redirect_uri: REDIRECT_URI,
+                redirect_uri: 'http://localhost:' + Config.getPort() || process.env.PORT || 4815 + '/callback',
                 grant_type: 'authorization_code'
             },
             headers: {
+                // @ts-ignore
                 'Authorization': 'Basic ' + (new Buffer.from(SpotifyTokenStore.CLIENT_ID + ':' + SpotifyTokenStore.CLIENT_SECRET).toString('base64'))
             },
             json: true
@@ -45,8 +44,8 @@ app.get('/callback', (req, res) => {
 })
 
 app.get('/token', (req, res) => {
-    const accessToken = req.query.access_token
-    const refreshToken = req.query.refresh_token
+    const accessToken = req.query.access_token as string
+    const refreshToken = req.query.refresh_token as string
     if (refreshToken) SpotifyTokenStore.refreshToken = refreshToken
     if (accessToken) SpotifyTokenStore.accessToken = accessToken;
     res.send('<script>window.close()</script>')
@@ -75,8 +74,9 @@ app.get('/toggle', (req, res) => {
 });
 
 export class WebserverProvider {
-    static async initialize() {
+    static async initialize(): Promise<void> {
         return new Promise(async (resolve, reject) => {
+            const PORT = Config.getPort() || process.env.PORT || 4815;
             try {
                 app.listen(PORT, () => {
                     Logger.debug("Started server on port " + PORT);
@@ -92,15 +92,15 @@ export class WebserverProvider {
 
 export class StateController {
     static enabled = true;
-    
+
     static isEnabled() {
         return this.enabled;
     }
-    
+
     static enable() {
         this.enabled = true;
     }
-    
+
     static disable() {
         this.enabled = false;
     }

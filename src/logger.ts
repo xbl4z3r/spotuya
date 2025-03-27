@@ -21,33 +21,33 @@ export default class Logger {
         }
     }
 
-    static info(message) {
+    static info(message: any) {
         console.log(chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[INFO] ${message}\n`);
     }
 
-    static warn(message) {
+    static warn(message: any) {
         console.log(chalk.hex("#FFA500")("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[WARN] ${message}\n`);
     }
 
-    static error(message) {
+    static error(message: any) {
         console.log(chalk.hex("#FF0000")("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[ERROR] ${message}\n`);
     }
 
-    static fatal(message) {
+    static fatal(message: any) {
         console.log(chalk.hex("#FF0000")("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[FATAL] ${message}\n`);
         process.exit(1);
     }
 
-    static debug(message) {
+    static debug(message: any) {
         if (this.debugMode) console.log(chalk.hex("#ff00dd")("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[DEBUG] ${message}\n`);
     }
 
-    static setDebugMode(mode) {
+    static setDebugMode(mode: boolean) {
         this.debugMode = mode;
     }
 }

@@ -3,16 +3,17 @@ import {TuyaContext} from "@tuya/tuya-connector-nodejs";
 import Logger from "./logger.js";
 import chalk from "chalk";
 import Utils from "./utils.js";
+import {ConfigData} from "../@types/types";
 
 const REGIONS = ['eu', 'us', 'cn', 'in'];
 
 export default class Cloud {
-    context
-    userId
-    region
+    context: any
+    userId: string = ""
+    region: string = ""
     static instance = new Cloud();
-    
-    static async initialize(config) {
+
+    static async initialize(config: ConfigData['tuya']) {
         Cloud.instance.userId = config.userId;
         Cloud.instance.region = config.region;
         Cloud.instance.context = new TuyaContext({
@@ -21,7 +22,7 @@ export default class Cloud {
             secretKey: config.clientSecret
         });
     }
-    
+
     static async wizard() {
         let questions = [
             {
@@ -40,6 +41,7 @@ export default class Cloud {
         let foundAPIRegion;
 
         try {
+            // @ts-ignore
             const {device, region} = await Promise.any(REGIONS.map(async region => {
                 const api = new TuyaContext({
                     baseUrl: `https://openapi.tuya${region}.com`,
@@ -81,7 +83,8 @@ export default class Cloud {
             Logger.fatal("Error while setting up... Make sure your details are correct and try again.");
         }
 
-        const groupedDevices = {};
+        const groupedDevices: any = {};
+        // @ts-ignore
         for (const device of result.result) {
             if (device.node_id) {
                 if (!groupedDevices[device.local_key] || !groupedDevices[device.local_key].subDevices) {
@@ -94,14 +97,15 @@ export default class Cloud {
             }
         }
         return {
-            devices: Object.values(groupedDevices).map(device => {
+            devices: Object.values(groupedDevices).map((device: any) => {
                 const pretty = {
                     name: device.name,
                     id: device.id,
-                    key: device.local_key
+                    key: device.local_key,
+                    subDevices: []
                 };
                 if (device.subDevices) {
-                    pretty.subDevices = device.subDevices.map(subDevice => ({
+                    pretty.subDevices = device.subDevices.map((subDevice: { name: any; id: any; node_id: any; }) => ({
                         name: subDevice.name,
                         id: subDevice.id,
                         cid: subDevice.node_id
@@ -111,11 +115,11 @@ export default class Cloud {
             }),
             userId: foundUserId,
             region: foundAPIRegion,
-            clientId: answers.clientId, 
+            clientId: answers.clientId,
             clientSecret: answers.clientSecret
         };
     }
-    
+
     static getContext() {
         return Cloud.instance.context;
     }
