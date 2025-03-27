@@ -1,5 +1,6 @@
 import Logger from "../utils/logger.js";
 import {SpotifyApiService} from "../services/spotify-api.js";
+import {SpotifyTokenStore} from "../store/spotify-token-store.js";
 
 export class SpotifyPlaybackStore {
     static isPlaying = false;
@@ -60,6 +61,13 @@ export class SpotifyPlaybackStore {
             }
         } catch (error) {
             Logger.error(`Failed to fetch playback state: ${error}`);
+            // Try to refresh the access token
+            SpotifyTokenStore.getAccessToken().then((tokens: {
+                access_token: string;
+                refresh_token: string;
+            }) => {
+                SpotifyApiService.setAccessToken(tokens.access_token);
+            })
             return false;
         }
     }
