@@ -1,10 +1,10 @@
-import Logger from "./logger.js";
 import path from "path";
 import fs from "fs";
-import PM2Provider from "./pm2provider.js";
 import dotenv from "dotenv";
-import {ConfigData, DeviceData} from "../@types/types";
-import {getApplicationDirectory} from "./paths.js";
+import {ConfigData, DeviceData} from "../../@types/types.js";
+import Utils from "../utils/utils.js";
+import Logger from "../utils/logger.js";
+import AutoStartService from "../services/autostart.js";
 
 dotenv.config();
 
@@ -23,13 +23,14 @@ const DEFAULT_CONFIG: ConfigData = {
         clientId: "",
         clientSecret: "",
     },
-    configVersion: "2.1.1",
+    configVersion: "",
     refreshRate: 1000,
     startOnBoot: false,
     port: 4815,
     paletteMode: 0,
     cycleRate: 5000,
-    contrastOffset: 0
+    contrastOffset: 0,
+    outdatedConfigWarning: true,
 }
 
 export default class Config {
@@ -38,15 +39,16 @@ export default class Config {
     static useEnv = false;
 
     static getConfigPath() {
-        this.configPath = path.join(getApplicationDirectory(), CONFIG_FILE_NAME);
+        this.configPath = path.join(Utils.getApplicationDirectory(), CONFIG_FILE_NAME);
+        DEFAULT_CONFIG.configVersion = Utils.getVersion();
         if (!fs.existsSync(this.configPath)) fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
     }
 
     static initialize() {
-        const startTime = new Date().getTime();
+        const startTime = new Date().getMilliseconds();
         if (this.useEnv) this.loadConfigFromEnv();
         else this.loadConfigFromDisk();
-        Logger.debug(`Loaded config in ${new Date().getTime() - startTime}ms`);
+        Logger.debug(`Loaded config in ${new Date().getMilliseconds() - startTime}ms`);
     }
 
     static loadConfigFromEnv() {
@@ -70,7 +72,8 @@ export default class Config {
             port: parseInt(process.env.PORT || "4815"),
             paletteMode: parseInt(process.env.PALETTE_MODE || "0"),
             cycleRate: parseInt(process.env.CYCLE_RATE || "5000"),
-            contrastOffset: parseInt(process.env.CONTRAST_OFFSET || "0")
+            contrastOffset: parseInt(process.env.CONTRAST_OFFSET || "0"),
+            outdatedConfigWarning: (process.env.OUTDATED_CONFIG_WARNING || "") as unknown as boolean || true,
         };
         (process.env.DEVICES || "").split(',').forEach(device => {
             this.config.devices.push({
@@ -86,20 +89,15 @@ export default class Config {
         this.config = JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
     }
 
-    static saveConfig(config = undefined) {
+    static saveConfig() {
         if (this.useEnv) return Logger.warn("Cannot save config when using environment variables.");
-        if (config === undefined) this.loadConfigFromDisk();
-
-        const startTime = new Date().getTime();
-
         fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 4));
-
-        Logger.debug(`Saved config in ${new Date().getTime() - startTime}ms`);
     }
 
     static cleanConfig() {
         Logger.debug('Cleaning config...');
         if (this.configPath === "") this.getConfigPath();
+        DEFAULT_CONFIG.configVersion = Utils.getVersion();
         fs.writeFileSync(this.configPath, JSON.stringify(DEFAULT_CONFIG, null, 4));
         this.config = DEFAULT_CONFIG;
         Logger.info("Successfully cleaned the configuration file.");
@@ -134,8 +132,8 @@ export default class Config {
         if (this.config === undefined) this.initialize();
         Logger.debug(`Setting start on boot to ${value}...`);
         this.config.startOnBoot = value;
-        if (value) PM2Provider.createTask();
-        else PM2Provider.removeTask();
+        if (value) AutoStartService.createTask();
+        else AutoStartService.removeTask();
         this.saveConfig();
     }
 
@@ -193,8 +191,15 @@ export default class Config {
         Logger.debug(`Setting ${key} to ${value}...`);
         // @ts-ignore
         this.config[key] = value;
-        if (key === 'startOnBoot' && value) PM2Provider.createTask();
-        else if (key === 'startOnBoot' && !value) PM2Provider.removeTask();
+        if (key === 'startOnBoot' && value) AutoStartService.createTask();
+        else if (key === 'startOnBoot' && !value) AutoStartService.removeTask();
+        this.saveConfig();
+    }
+
+    static setOutdatedConfigWarning(value: boolean) {
+        if (this.config === undefined) this.initialize();
+        Logger.debug(`Setting outdated config warning to ${value}...`);
+        this.config.outdatedConfigWarning = value;
         this.saveConfig();
     }
 
@@ -252,6 +257,11 @@ export default class Config {
         if (this.config === undefined) this.initialize();
         // @ts-ignore
         return this.config[key];
+    }
+
+    static getOutdatedConfigWarning() {
+        if (this.config === undefined) this.initialize();
+        return this.config.outdatedConfigWarning;
     }
 
     static handleConfigActions(args: string[]) {

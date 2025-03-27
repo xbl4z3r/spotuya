@@ -2,6 +2,7 @@ import chalk from "chalk";
 import Utils from "./utils.js";
 import fs from "fs";
 import path from "node:path";
+import {SPOTIFY_COLOR} from "./constants.js";
 
 export default class Logger {
     static debugMode = false;
@@ -22,7 +23,7 @@ export default class Logger {
     }
 
     static info(message: any) {
-        console.log(chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
+        console.log(chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "] ") + message);
         if (this.logFilePath !== "not_initialized") fs.appendFileSync(this.logFilePath, `[INFO] ${message}\n`);
     }
 

@@ -1,15 +1,9 @@
-import open from "open";
 import request from "request";
-
-import Logger from "./logger.js";
-import Utils from "./utils.js";
-import SpotifyWebApi from "spotify-web-api-node";
-import Config from "./config.js";
-
-const SCOPE = [
-    'user-read-playback-state',
-    'user-read-currently-playing',
-].join('%20')
+import open from "open";
+import {SCOPE} from "../utils/constants.js";
+import Logger from "../utils/logger.js";
+import Utils from "../utils/utils.js";
+import Config from "../config/config.js";
 
 export class SpotifyTokenStore {
     static CLIENT_ID = "";
@@ -51,7 +45,7 @@ export class SpotifyTokenStore {
                     + '&response_type=code'
                     + '&scope=' + SCOPE
                     + '&show_dialog=' + false
-                    + '&redirect_uri=' + 'http://localhost:' + Config.getPort() + '/callback'
+                    + '&redirect_uri=' + 'http://localhost:' + (process.env.PORT || Config.getPort() || 4815) + '/callback'
                     + '&state=' + Utils.generateRandomString(16)
                 );
                 const interval = setInterval(() => {
@@ -78,87 +72,5 @@ export class SpotifyTokenStore {
 
     static setRefreshToken(refreshToken: string) {
         this.refreshToken = refreshToken;
-    }
-}
-
-export class SpotifyPlaybackStore {
-    static isPlaying = false;
-    static songName = "";
-    static artistName = "";
-    static albumName = "";
-    static imageUrl = "";
-    static progress = 0;
-
-    static setPlaying(playing: boolean) {
-        this.isPlaying = playing;
-    }
-
-    static setSongName(songName: string) {
-        this.songName = songName;
-    }
-
-    static setArtistName(artistName: string) {
-        this.artistName = artistName;
-    }
-
-    static setAlbumName(albumName: string) {
-        this.albumName = albumName;
-    }
-
-    static setImageUrl(imageUrl: string) {
-        this.imageUrl = imageUrl;
-    }
-
-    static setProgress(progress: number) {
-        this.progress = progress;
-    }
-
-    static getSongName() {
-        return this.songName;
-    }
-
-    static getArtistName() {
-        return this.artistName;
-    }
-
-    static getAlbumName() {
-        return this.albumName;
-    }
-
-    static getImageUrl() {
-        return this.imageUrl;
-    }
-
-    static getProgress() {
-        return this.progress;
-    }
-
-    static getPlaying() {
-        return this.isPlaying;
-    }
-}
-
-export class SpotifyApiProvider {
-    spotifyApi: SpotifyWebApi | null = null;
-    static instance = new SpotifyApiProvider();
-
-    static initialize(clientId: string, clientSecret: string, accessToken: string | null = null) {
-        SpotifyApiProvider.instance.spotifyApi = new SpotifyWebApi({
-            clientId: clientId,
-            clientSecret: clientSecret,
-            // @ts-ignore
-            scope: 'user-read-currently-playing user-read-playback-state',
-        });
-        if (accessToken) SpotifyApiProvider.setAccessToken(accessToken);
-    }
-
-    static setAccessToken(accessToken: string) {
-        if(SpotifyApiProvider.instance.spotifyApi) SpotifyApiProvider.instance.spotifyApi.setAccessToken(accessToken);
-        else Logger.error("Spotify API not initialized");
-    }
-
-    static getApi(): SpotifyWebApi {
-        if(!SpotifyApiProvider.instance.spotifyApi) Logger.error("Spotify API not initialized");
-        return SpotifyApiProvider.instance.spotifyApi as SpotifyWebApi;
     }
 }

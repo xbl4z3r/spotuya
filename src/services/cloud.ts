@@ -1,9 +1,9 @@
 import inquirer from "inquirer";
 import {TuyaContext} from "@tuya/tuya-connector-nodejs";
-import Logger from "./logger.js";
 import chalk from "chalk";
-import Utils from "./utils.js";
-import {ConfigData} from "../@types/types";
+import {ConfigData} from "../../@types/types.js";
+import {SPOTIFY_COLOR, TUYA_API_QUESTIONS} from "../utils/constants.js";
+import Logger from "../utils/logger.js";
 
 const REGIONS = ['eu', 'us', 'cn', 'in'];
 
@@ -28,11 +28,11 @@ export default class Cloud {
             {
                 name: 'deviceId',
                 message: 'Provide a \'virtual ID\' of a device currently registered in the app:',
-                prefix: chalk.hex(Utils.SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
+                prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
             }
         ];
 
-        questions = [...Utils.TUYA_API_QUESTIONS, ...questions];
+        questions = [...TUYA_API_QUESTIONS, ...questions];
 
         const answers = await inquirer.prompt(questions);
 

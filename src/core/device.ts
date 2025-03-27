@@ -1,6 +1,6 @@
-import Logger from "./logger.js";
-import Cloud from "./cloud.js";
-import {DeviceData, CommandData} from "../@types/types";
+import Logger from "../utils/logger.js";
+import {CommandData, DeviceData} from "../../@types/types.js";
+import Cloud from "../services/cloud.js";
 
 export default class Device {
     id: string
@@ -13,7 +13,6 @@ export default class Device {
         v: number,
     } | null = null;
     hasBeenReset: boolean = false
-    interval: NodeJS.Timeout | null = null;
 
     constructor(deviceData: DeviceData) {
         this.id = deviceData.id;
@@ -75,10 +74,6 @@ export default class Device {
         Logger.debug(`Device ${this.name} (${this.id}) initialized with state: ${JSON.stringify(this.initialState)}`);
     }
 
-    setInterval(interval: NodeJS.Timeout) {
-        this.interval = interval;
-    }
-
     setColor(color: {
         h: number,
         s: number,
@@ -127,9 +122,5 @@ export default class Device {
                 ],
             },
         });
-    }
-
-    async destroy() {
-        if (this.interval) clearInterval(this.interval);
     }
 }

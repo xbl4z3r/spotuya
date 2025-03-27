@@ -1,12 +1,11 @@
-export type DeviceData = {
+export interface DeviceData {
     id: string,
     name: string,
     key: string,
     resetDevice?: () => Promise<void>,
-    destroy?: () => Promise<void>,
 }
 
-export type CommandData = {
+export interface CommandData {
     powered: {
         code: string,
         value: boolean,
@@ -17,7 +16,7 @@ export type CommandData = {
     },
 }
 
-export type ConfigData = {
+export interface ConfigData {
     devices: DeviceData[],
     tuya: {
         clientId: string,
@@ -38,4 +37,22 @@ export type ConfigData = {
     paletteMode: number,
     cycleRate: number,
     contrastOffset: number,
+    outdatedConfigWarning: boolean,
+}
+
+export interface CommandOption {
+    name: string;
+    alias?: string;
+    description: string;
+    required?: boolean;
+    type?: 'string' | 'boolean' | 'number';
+    default?: any;
+}
+
+export interface Command {
+    name: string;
+    aliases?: string[];
+    description: string;
+    options: CommandOption[];
+    run: (args: string[], options: Record<string, any>) => Promise<void>;
 }

@@ -1,8 +1,10 @@
-import Config from "./config.js";
 import express from "express";
-import Logger from "./logger.js";
 import request from "request";
-import {SpotifyPlaybackStore, SpotifyTokenStore} from "./spotify.js";
+import {SpotifyTokenStore} from "../store/spotify-token-store.js";
+import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
+import Logger from "../utils/logger.js";
+import {StateStore} from "../store/state-store.js";
+import Config from "../config/config.js";
 
 const app = express()
 
@@ -18,7 +20,7 @@ app.get('/callback', (req, res) => {
             url: 'https://accounts.spotify.com/api/token',
             form: {
                 code: code,
-                redirect_uri: 'http://localhost:' + Config.getPort() || process.env.PORT || 4815 + '/callback',
+                redirect_uri: 'http://localhost:' + (process.env.PORT || Config.getPort() || 4815) + '/callback',
                 grant_type: 'authorization_code'
             },
             headers: {
@@ -53,7 +55,7 @@ app.get('/token', (req, res) => {
 
 app.get('/', (req, res) => {
     res.send(
-        `Enabled: ${StateController.isEnabled()}<br>` +
+        `Enabled: ${StateStore.isEnabled()}<br>` +
         `Playing: ${SpotifyPlaybackStore.getPlaying()}<br>` +
         `Song name: ${SpotifyPlaybackStore.getSongName()}<br>` +
         `Artist name: ${SpotifyPlaybackStore.getArtistName()}<br>` +
@@ -65,18 +67,18 @@ app.get('/', (req, res) => {
 })
 
 app.get('/toggle', (req, res) => {
-    if (StateController.isEnabled()) {
-        StateController.disable()
+    if (StateStore.isEnabled()) {
+        StateStore.disable()
     } else {
-        StateController.enable()
+        StateStore.enable()
     }
     res.send('<script>window.close()</script>');
 });
 
-export class WebserverProvider {
+export class Webserver {
     static async initialize(): Promise<void> {
         return new Promise(async (resolve, reject) => {
-            const PORT = Config.getPort() || process.env.PORT || 4815;
+            const PORT = process.env.PORT || Config.getPort() || 4815;
             try {
                 app.listen(PORT, () => {
                     Logger.debug("Started server on port " + PORT);
@@ -87,21 +89,5 @@ export class WebserverProvider {
                 reject();
             }
         })
-    }
-}
-
-export class StateController {
-    static enabled = true;
-
-    static isEnabled() {
-        return this.enabled;
-    }
-
-    static enable() {
-        this.enabled = true;
-    }
-
-    static disable() {
-        this.enabled = false;
     }
 }

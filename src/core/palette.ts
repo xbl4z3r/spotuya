@@ -1,6 +1,6 @@
-import Config from "./config.js";
+import Config from "../config/config.js";
 
-export default class PaletteProvider {
+export default class Palette {
     static paletteMode = 0;
     static interval: NodeJS.Timeout | null = null;
 
