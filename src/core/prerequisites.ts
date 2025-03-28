@@ -41,10 +41,15 @@ async function setupApplication(args: string[]) {
 
 async function setupGeneral(): Promise<boolean> {
     Logger.info("Checking configuration...");
-    if (Config.getRefreshRate() < 1000) {
-        Config.setRefreshRate(1000);
+    if (Config.getPollRate() < 1000) {
+        Config.setPollRate(1000);
         Logger.warn("Your refresh rate was too low and has been updated to 1000ms.");
-    } else Logger.debug("Refresh rate is set to " + Config.getRefreshRate() + "ms.");
+    } else Logger.debug("Refresh rate is set to " + Config.getPollRate() + "ms.");
+
+    if (Config.getPollMode() !== "dynamic" && Config.getPollMode() !== "static") {
+        Config.setPollMode("dynamic");
+        Logger.warn("Your poll mode was not set. It has been updated to dynamic.");
+    }
 
     if (Config.getStartOnBoot() === undefined) {
         Config.setStartOnBoot(false);
@@ -108,7 +113,7 @@ async function setupSpotify(): Promise<boolean> {
         Config.setSpotifyConfig(spotifyConfig);
 
         Logger.info("Successfully logged in to Spotify.");
-        SpotifyApiService.initialize(spotifyConfig.clientId, spotifyConfig.clientSecret, spotifyConfig.accessToken);
+        SpotifyApiService.initialize(spotifyConfig.clientId, spotifyConfig.clientSecret, spotifyConfig.accessToken, Config.getPollRate());
 
         return true;
     } catch (error) {

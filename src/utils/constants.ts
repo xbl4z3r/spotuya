@@ -42,14 +42,26 @@ export const TUYA_API_QUESTIONS = [
 
 export const GENERAL_QUESTIONS = [
     {
-        name: 'refreshRate',
-        message: 'The refresh rate in milliseconds (default: 5000):',
+        name: 'pollRate',
+        message: 'The poll rate for the playback API in milliseconds (default: 5000):',
         prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
         default: 5000
     },
     {
+        name: 'pollMode',
+        message: 'The poll mode (dynamic, static) (default: dynamic):',
+        prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+        default: "dynamic"
+    },
+    {
+        name: 'maxPollInterval',
+        message: 'The maximum poll interval in milliseconds (default: 20000):',
+        prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+        default: 20000
+    },
+    {
         name: 'startOnBoot',
-        message: '(INFO: This will install and use PM2) Start SpoTuya on boot (y/n):',
+        message: 'Run SpoTuya on system start (y/n):',
         prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
         default: "n"
     },
@@ -76,5 +88,5 @@ export const GENERAL_QUESTIONS = [
         message: 'The contrast offset (default: 0, between -100 and 100):',
         prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
         default: 0
-    }
+    },
 ];

@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import Logger from '../utils/logger.js';
 import {SPOTIFY_COLOR} from '../utils/constants.js';
-import Utils from '../utils/utils.js';
 import {Command} from "../@types/types.js";
 import CommandHandler from "../core/command-handler.js";
 
@@ -12,13 +11,14 @@ const help: Command = {
     options: [
         {
             name: "command",
+            alias: "c",
             description: "Show help for a specific command",
             required: false,
             type: "string"
         }
     ],
     run: async (args: string[], options: Record<string, any>): Promise<void> => {
-        const specificCommand = args[0] || options.command;
+        const specificCommand = options.command || args[0];
 
         if (specificCommand) {
             const commands = CommandHandler.getCommands();
@@ -38,7 +38,8 @@ const help: Command = {
             Logger.info(`Description: ${command.description}`);
 
             if (command.options && command.options.length) {
-                Logger.info('\nOptions:');
+                Logger.info('');
+                Logger.info('Options:');
                 command.options.forEach(option => {
                     const required = option.required ? chalk.red(' (required)') : '';
                     const defaultValue = option.default !== undefined ? chalk.gray(` (default: ${option.default})`) : '';
@@ -47,8 +48,6 @@ const help: Command = {
                 });
             }
         } else {
-            Utils.printVersion();
-            Logger.info('');
             Logger.info('Available commands:');
 
             const commands = CommandHandler.getCommands();
@@ -60,7 +59,7 @@ const help: Command = {
 
             Logger.info('');
             Logger.info('For more information about a specific command, run:');
-            Logger.info(`  ${chalk.hex(SPOTIFY_COLOR)('spotuya help <command>')}`);
+            Logger.info(`  ${chalk.hex(SPOTIFY_COLOR)('spotuya help -c command')}`);
         }
     }
 };

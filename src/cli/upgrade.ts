@@ -14,6 +14,9 @@ const upgrade: Command = {
     options: [],
     run: async (args: string[], options: Record<string, any>): Promise<void> => {
         Logger.info("Checking configuration...");
+        if (Config.isUsingEnv()) {
+            return Logger.error("You cannot upgrade the configuration when using environment variables. You need to upgrade the configuration manually.");
+        }
         if (Config.getConfigVersion() === Utils.getVersion()) {
             return Logger.info("Your configuration is up to date.");
         }
@@ -51,7 +54,7 @@ async function upgradeFromVersion(version: string): Promise<void> {
                 }
             ]);
             Config.setPaletteMode(paletteAnswers.colorPalette);
-            Config.setRefreshRate(paletteAnswers.cycleRate);
+            Config.setPollRate(paletteAnswers.cycleRate);
         // Fall through
         case "2.0.1":
             const contrastAnswer = await inquirer.prompt([
@@ -69,6 +72,11 @@ async function upgradeFromVersion(version: string): Promise<void> {
         case "2.1.1":
             const dataProvider = (await inquirer.prompt(PROVIDER_QUESTION)).dataProvider;
             Config.setDataProvider(dataProvider);
+        // Fall through
+        case "2.2.0":
+            Config.setPollRate(Config.getValue("refreshRate"));
+            Config.setPollMode("dynamic");
+            Config.setMaxPollInterval(20000);
             break;
         default:
             Logger.warn(`No known upgrade path for version ${version}.`);

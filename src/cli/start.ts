@@ -23,67 +23,73 @@ const start: Command = {
         if (!(await setupGeneral())) return Logger.fatal("Failed to set up general configuration. Please check your configuration file.");
         if (Config.getDataProvider() === "spotify") if (!(await setupSpotify())) return Logger.fatal("Failed to set up Spotify configuration. Please check your configuration file.");
 
-        SpotifyApiService.startPolling(Config.getRefreshRate());
+        SpotifyApiService.startPolling();
 
         const devices = await setupDevices();
         if (devices == null) return Logger.fatal("Failed to set up devices. Please check your configuration file.");
         DeviceStore.addDevices(devices);
 
-        Logger.info(`Starting color sync with refresh rate of ${Config.getRefreshRate()}ms`);
+        Logger.info(`Starting ${Config.getPollMode()} color sync with${Config.getPollMode() === "dynamic" ? " a base " : " "}poll rate of ${Config.getPollRate()}ms`);
         setInterval(async () => {
-            if (SpotifyPlaybackStore.getNowPlaying().is_playing) {
-                if (!Palette.isCycling()) Palette.initialize();
-
-                if (!StateStore.isEnabled()) {
-                    await Utils.resetDevices(DeviceStore.getDevices());
-                    return;
-                }
-
-                const imageUrl = SpotifyPlaybackStore.getNowPlaying().track.artUrl;
-                if (imageUrl) {
-                    for (const device of DeviceStore.getDevices()) {
-                        await Vibrant.from(imageUrl).getPalette(async (err, palette) => {
-                            let rgb = [0, 0, 0];
-                            if (palette == null || err != null) return;
-
-                            switch (Palette.getPaletteMode().toString()) {
-                                case "0":
-                                    if (palette.Vibrant == null) return;
-                                    rgb = palette.Vibrant.rgb;
-                                    break;
-                                case "1":
-                                    if (palette.DarkVibrant == null) return;
-                                    rgb = palette.DarkVibrant.rgb;
-                                    break;
-                                case "2":
-                                    if (palette.LightVibrant == null) return;
-                                    rgb = palette.LightVibrant.rgb;
-                                    break;
-                                case "3":
-                                    if (palette.Muted == null) return;
-                                    rgb = palette.Muted.rgb;
-                                    break;
-                                case "4":
-                                    if (palette.DarkMuted == null) return;
-                                    rgb = palette.DarkMuted.rgb;
-                                    break;
-                                case "5":
-                                    if (palette.LightMuted == null) return;
-                                    rgb = palette.LightMuted.rgb;
-                                    break;
-                                default:
-                                    Logger.fatal(`Invalid palette mode ${Palette.getPaletteMode()}. Please run 'spotuya help' for more information.`);
-                                    break;
-                            }
-                            device.setColor(Utils.rgbToHsv(rgb));
-                        });
-                    }
-                }
-            } else {
+            if (!SpotifyPlaybackStore.getNowPlaying().is_playing) {
                 Palette.destroy();
                 await Utils.resetDevices(DeviceStore.getDevices());
+                return;
             }
-        }, Config.getRefreshRate());
+            if (!Palette.isCycling()) Palette.initialize();
+
+            if (!StateStore.isEnabled()) {
+                await Utils.resetDevices(DeviceStore.getDevices());
+                return;
+            }
+
+            const imageUrl = SpotifyPlaybackStore.getNowPlaying().track.artUrl;
+            if (!imageUrl) return;
+
+            try {
+                const palette: any = await new Promise((resolve, reject) => {
+                    Vibrant.from(imageUrl).getPalette((err, result) => {
+                        if (err || !result) reject(err || new Error("No palette generated"));
+                        else resolve(result);
+                    });
+                });
+
+                let rgb = [0, 0, 0];
+                const paletteMode = Palette.getPaletteMode().toString();
+
+                switch (paletteMode) {
+                    case "0":
+                        rgb = palette.Vibrant?.rgb || rgb;
+                        break;
+                    case "1":
+                        rgb = palette.DarkVibrant?.rgb || rgb;
+                        break;
+                    case "2":
+                        rgb = palette.LightVibrant?.rgb || rgb;
+                        break;
+                    case "3":
+                        rgb = palette.Muted?.rgb || rgb;
+                        break;
+                    case "4":
+                        rgb = palette.DarkMuted?.rgb || rgb;
+                        break;
+                    case "5":
+                        rgb = palette.LightMuted?.rgb || rgb;
+                        break;
+                    default:
+                        Logger.fatal(`Invalid palette mode ${paletteMode}. Please run 'spotuya help' for more information.`);
+                        return;
+                }
+
+                for (const device of DeviceStore.getDevices()) {
+                    device.setColor(Utils.rgbToHsv(rgb));
+                }
+            } catch (err) {
+                Logger.error("Failed to generate palette:" + err);
+                await Utils.resetDevices(DeviceStore.getDevices());
+                return;
+            }
+        }, 1000); // Poll devices every second
 
         Logger.info("SpoTuya has started successfully!");
     }

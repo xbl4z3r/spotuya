@@ -18,8 +18,33 @@ export class SpotifyPlaybackStore {
         type: "unknown",
     };
 
-    static setNowPlaying(nowPlaying: NowPlaying) {
-        this.nowPlaying = nowPlaying;
+    private static previousTrackName: string = '';
+    private static previousDurationMs: number = 0;
+    private static previousProgressMs: number = 0;
+    private static wasTrackSkipped: boolean = false;
+
+    static setNowPlaying(newPlayback: NowPlaying) {
+        const currentTrackName = newPlayback.track.name;
+
+        if (this.previousTrackName !== '' &&
+            this.previousTrackName !== currentTrackName) {
+            if (this.previousDurationMs > 0) {
+                const percentagePlayed = this.previousProgressMs / this.previousDurationMs;
+                this.wasTrackSkipped = percentagePlayed < 0.9;
+            }
+        } else {
+            this.wasTrackSkipped = false;
+        }
+
+        this.previousDurationMs = newPlayback.track.duration;
+        this.previousProgressMs = newPlayback.progress;
+        this.previousTrackName = currentTrackName;
+
+        this.nowPlaying = newPlayback;
+    }
+
+    public static wasLastTrackSkipped(): boolean {
+        return this.wasTrackSkipped;
     }
 
     static getNowPlaying(): NowPlaying {

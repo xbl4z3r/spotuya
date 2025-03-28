@@ -6,6 +6,7 @@ import os from "os";
 import convert from "color-convert";
 import Config from "../config/config.js";
 import {DeviceData} from "../@types/types.js";
+import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,18 +85,29 @@ export default class Utils {
         return packageJson.main;
     }
 
-    static printVersion() {
-        Logger.info("Running SpoTuya v" + Utils.getVersion() + " by xbl4z3r.");
-        Logger.info("  - Not affiliated with Spotify® or Tuya®.");
-        Logger.info("  - GitHub: https://github.com/xbl4z3r/spotuya");
-    }
+    static calculateDynamicInterval(position: number, duration: number): number {
+        const timeRemaining = duration - position;
+        const maxInterval = Config.getMaxPollInterval();
 
-    static handleSetup = async (args: string[]) => {
-        const flagArgs = args.filter(arg => arg.startsWith("--"));
-        try {
+        const MIN_INTERVAL = 1000;
 
-        } catch (err) {
-            Logger.fatal("Error while setting up... Make sure your details are correct and try again.");
+        if (!SpotifyPlaybackStore.getNowPlaying().is_playing) {
+            Logger.debug("Track is not playing, polling quickly");
+            return MIN_INTERVAL;
+        }
+
+        if (SpotifyPlaybackStore.wasLastTrackSkipped()) {
+            Logger.debug("Track was skipped, polling quickly");
+            return MIN_INTERVAL;
+        }
+
+        if (timeRemaining <= 5000) {
+            return Math.max(MIN_INTERVAL, Math.min(timeRemaining / 2, 2500));
+        } else if (timeRemaining <= 30000) {
+            return Math.min(timeRemaining / 4, 5000);
+        } else {
+            const dynamicInterval = Math.min(timeRemaining / 10, maxInterval);
+            return Math.max(MIN_INTERVAL, dynamicInterval);
         }
     }
 }

@@ -29,9 +29,7 @@ function printBanner() {
 
 async function main() {
     printBanner();
-    if (nonFlagArgs.length === 0) {
-        return Logger.fatal("No arguments provided. Please run `spotuya help` for more information.");
-    }
+    if (nonFlagArgs.length === 0) return Logger.fatal("No arguments provided. Please run `spotuya help` for more information.");
     await setupApplication(args);
     await CommandHandler.executeCommand(args);
 }

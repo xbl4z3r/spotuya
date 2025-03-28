@@ -5,6 +5,7 @@ import {ConfigData, DeviceData} from "../@types/types.js";
 import Utils from "../utils/utils.js";
 import Logger from "../utils/logger.js";
 import AutoStartService from "../services/autostart.js";
+import * as process from "node:process";
 
 dotenv.config();
 
@@ -24,7 +25,9 @@ const DEFAULT_CONFIG: ConfigData = {
         clientSecret: "",
     },
     configVersion: "",
-    refreshRate: 1000,
+    pollRate: 5000,
+    pollMode: "dynamic",
+    maxPollInterval: 20000,
     startOnBoot: false,
     port: 4815,
     paletteMode: 0,
@@ -54,11 +57,17 @@ export default class Config {
 
     static loadConfigFromEnv() {
         this.config = {
-            devices: [],
+            devices: (process.env.DEVICES || "").split(',').map(device => {
+                return {
+                    id: device,
+                    name: "Device",
+                    key: "unknown"
+                }
+            }),
             tuya: {
                 clientId: process.env.TUYA_CLIENT_ID || "",
                 clientSecret: process.env.TUYA_CLIENT_SECRET || "",
-                region: process.env.TUYA_REGION || "",
+                region: (process.env.TUYA_REGION || "").toLowerCase(),
                 userId: process.env.TUYA_USER_ID || ""
             },
             spotify: {
@@ -67,23 +76,20 @@ export default class Config {
                 refreshToken: process.env.SPOTIFY_REFRESH_TOKEN || "",
                 accessToken: "",
             },
-            configVersion: process.env.CONFIG_VERSION || "2.1.0",
-            refreshRate: parseInt(process.env.REFRESH_RATE || "1000"),
+            configVersion: process.env.CONFIG_VERSION || Utils.getVersion(),
+            pollRate: parseInt(process.env.REFRESH_RATE || "5000"),
+            pollMode: process.env.DATA_PROVIDER ? process.env.DATA_PROVIDER.toLowerCase() === "static" ?
+                "static" : "dynamic" : "dynamic",
+            maxPollInterval: parseInt(process.env.MAX_POLL_INTERVAL || "20000"),
             startOnBoot: (process.env.START_ON_BOOT || "") as unknown as boolean || false,
             port: parseInt(process.env.PORT || "4815"),
             paletteMode: parseInt(process.env.PALETTE_MODE || "0"),
             cycleRate: parseInt(process.env.CYCLE_RATE || "5000"),
             contrastOffset: parseInt(process.env.CONTRAST_OFFSET || "0"),
             outdatedConfigWarning: (process.env.OUTDATED_CONFIG_WARNING || "") as unknown as boolean || true,
-            dataProvider: process.env.DATA_PROVIDER ? new URL(process.env.DATA_PROVIDER) : "spotify",
+            dataProvider: process.env.DATA_PROVIDER ? process.env.DATA_PROVIDER.toLowerCase() === "spotify" ?
+                "spotify" : new URL(process.env.DATA_PROVIDER.toLowerCase()) : "spotify",
         };
-        (process.env.DEVICES || "").split(',').forEach(device => {
-            this.config.devices.push({
-                id: device,
-                name: "Device",
-                key: "unknown"
-            });
-        });
     }
 
     static loadConfigFromDisk() {
@@ -139,10 +145,24 @@ export default class Config {
         this.saveConfig();
     }
 
-    static setRefreshRate(value: number) {
+    static setPollRate(value: number) {
         if (this.config === undefined) this.initialize();
         Logger.debug(`Setting refresh rate to ${value}...`);
-        this.config.refreshRate = value;
+        this.config.pollRate = value;
+        this.saveConfig();
+    }
+
+    static setPollMode(mode: "static" | "dynamic") {
+        if (this.config === undefined) this.initialize();
+        Logger.debug(`Setting poll mode to ${mode}...`);
+        this.config.pollMode = mode;
+        this.saveConfig();
+    }
+
+    static setMaxPollInterval(value: number) {
+        if (this.config === undefined) this.initialize();
+        Logger.debug(`Setting max poll interval to ${value}...`);
+        this.config.maxPollInterval = value;
         this.saveConfig();
     }
 
@@ -217,9 +237,19 @@ export default class Config {
         return this.config.configVersion;
     }
 
-    static getRefreshRate() {
+    static getPollRate() {
         if (this.config === undefined) this.initialize();
-        return this.config.refreshRate;
+        return this.config.pollRate;
+    }
+
+    static getPollMode() {
+        if (this.config === undefined) this.initialize();
+        return this.config.pollMode;
+    }
+
+    static getMaxPollInterval() {
+        if (this.config === undefined) this.initialize();
+        return this.config.maxPollInterval;
     }
 
     static getDevices() {
@@ -278,23 +308,9 @@ export default class Config {
         return this.config.dataProvider;
     }
 
-    static handleConfigActions(args: string[]) {
-        const action = args[args.indexOf("config") + 1];
-        if (!action || (action !== "set" && action !== "get")) return Logger.fatal("Invalid action provided. Please use `set` or `get`.");
-        if (action === "set") {
-            const key = args[args.indexOf("config") + 2];
-            const value = args[args.indexOf("config") + 3];
-            if (!key || !value) return Logger.fatal("Invalid key or value provided. Please provide a key and value.");
-            if (Config.getValue(key) === undefined) return Logger.fatal("Invalid key provided. Please provide a valid key.");
-            Config.setValue(key, value);
-            Logger.info("Successfully set " + key + " to " + value + ".");
-        } else if (action === "get") {
-            const key = args[args.indexOf("config") + 2];
-            if (!key) return Logger.fatal("Invalid key provided. Please provide a key.");
-            const value = Config.getValue(key);
-            if (value === undefined) return Logger.fatal("Invalid key provided. Please provide a valid key.");
-            Logger.info("Value of " + key + " is " + value + ".");
-        }
+    static getConfigKeys() {
+        if (this.config === undefined) this.initialize();
+        return Object.keys(this.config);
     }
 
     static enableEnv() {

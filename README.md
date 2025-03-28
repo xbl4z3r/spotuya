@@ -21,6 +21,14 @@ remained the same, but the way SpoTuya works has changed. You can now use .env f
 make running SpoTuya in the cloud easier. Please refer to `example.env` for an example of how to set up your .env file.
 <br>
 
+## Custom Data API
+
+Starting from version 2.2.0, SpoTuya supports custom data APIs. This means that you can use your own API to provide the
+data to SpoTuya. This is useful if you want to use SpoTuya with a different music streaming service or if you want to
+have a single API between multiple instances of SpoTuya. You will have to create and host your own API that provides the
+data in the format defined in `src/types/types.ts` in the `NowPlaying` interface. After that just update the config file
+with the URL of your API and SpoTuya will use it instead of the Spotify API.
+
 ## Features
 
 The latest version of SpoTuya supports the following features:
@@ -32,9 +40,10 @@ The latest version of SpoTuya supports the following features:
 - [x] Cloud API support.
 - [x] Support for multiple devices.
 - [x] Specific color palettes. (Vibrant, Dark Vibrant, Dark Muted, Muted)
+- [x] Support for more music streaming services. (As of 2.2.0 you can use your own API to provide the data to SpoTuya)
+- [x] Dynamic calculation of the next poll of the API based on the length of the song.
 - [ ] Web interface.
 - [ ] Support for more devices.
-- [ ] Support for more music streaming services.
 - [ ] Support for more color palettes.
 - [ ] Support for more light effects.
   <br>

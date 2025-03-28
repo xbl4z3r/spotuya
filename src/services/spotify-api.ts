@@ -4,6 +4,7 @@ import {SpotifyTokenStore} from "../store/spotify-token-store.js";
 import {NowPlaying} from "../@types/types.js";
 import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
 import Config from "../config/config.js";
+import Utils from "../utils/utils.js";
 
 const BASE_NOW_PLAYING: NowPlaying = {
     initialized: false,
@@ -24,11 +25,11 @@ const BASE_NOW_PLAYING: NowPlaying = {
 
 export class SpotifyApiService {
     private static instance = new SpotifyApiService();
-    private static pollingInterval: NodeJS.Timeout | null = null;
-    private static intervalDuration = 5000;
+    private pollingInterval: number = 5000;
+    private pollingTimeout: NodeJS.Timeout | null = null;
     private spotifyApi: SpotifyWebApi | null = null;
 
-    static initialize(clientId: string, clientSecret: string, accessToken: string | null = null) {
+    static initialize(clientId: string, clientSecret: string, accessToken: string | null = null, pollingInterval: number = 5000) {
         SpotifyApiService.instance.spotifyApi = new SpotifyWebApi({
             clientId: clientId,
             clientSecret: clientSecret,
@@ -36,41 +37,36 @@ export class SpotifyApiService {
             scope: 'user-read-currently-playing user-read-playback-state',
         });
         if (accessToken) SpotifyApiService.setAccessToken(accessToken);
+        if (pollingInterval) SpotifyApiService.instance.pollingInterval = pollingInterval;
     }
 
-    static startPolling(interval: number = this.intervalDuration) {
-        if (this.pollingInterval) {
-            this.stopPolling();
-        }
-
-        this.intervalDuration = interval;
+    static startPolling() {
         this.fetchAndStoreNowPlaying();
-
-        this.pollingInterval = setInterval(() => {
-            this.fetchAndStoreNowPlaying();
-        }, interval);
-
-        Logger.debug(`Spotify playback polling started with ${interval}ms interval`);
+        this.scheduleNextPoll(SpotifyPlaybackStore.getNowPlaying());
     }
 
-    static stopPolling() {
-        if (this.pollingInterval) {
-            clearInterval(this.pollingInterval);
-            this.pollingInterval = null;
-            Logger.debug("Spotify playback polling stopped");
+    public static stopPolling(): void {
+        if (SpotifyApiService.instance.pollingTimeout) {
+            clearTimeout(SpotifyApiService.instance.pollingTimeout);
+            SpotifyApiService.instance.pollingTimeout = null;
         }
     }
 
-    static setPollingInterval(interval: number) {
-        this.intervalDuration = interval;
-        if (this.pollingInterval) {
-            this.stopPolling();
-            this.startPolling(interval);
-        }
-    }
+    private static scheduleNextPoll(nowPlaying: NowPlaying): void {
+        let nextInterval = SpotifyApiService.instance.pollingInterval;
 
-    static isPolling(): boolean {
-        return this.pollingInterval !== null;
+        if (Config.getPollMode() === "dynamic" && nowPlaying.is_playing &&
+            nowPlaying.progress !== undefined && nowPlaying.track?.duration !== undefined) {
+            nextInterval = Utils.calculateDynamicInterval(
+                nowPlaying.progress,
+                nowPlaying.track.duration
+            );
+            Logger.debug(`Dynamic polling: next poll in ${Math.round(nextInterval / 1000)}s (${nowPlaying.progress}/${nowPlaying.track.duration}ms)`);
+        }
+
+        SpotifyApiService.instance.pollingTimeout = setTimeout(() => {
+            this.startPolling();
+        }, nextInterval);
     }
 
     private static async fetchCurrentPlaybackSpotify(): Promise<NowPlaying> {
@@ -107,6 +103,7 @@ export class SpotifyApiService {
                     };
                     nowPlaying.track.artUrl = data.body.item.images?.[0]?.url;
                 }
+                nowPlaying.track.duration = data.body.item.duration_ms || 0;
                 nowPlaying.track.url = data.body.item.external_urls.spotify;
                 nowPlaying.progress = data.body.progress_ms || 0;
                 nowPlaying.played_at = new Date(data.body.timestamp).toString();

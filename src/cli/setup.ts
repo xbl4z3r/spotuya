@@ -34,7 +34,7 @@ const setup: Command = {
             if (options.length === 0 || (Object.keys(options).length === 1 && Object.keys(options).includes("debug"))) fullSetup = true;
             if (!options.devices && Config.getDevices().length === 0 && !fullSetup) return Logger.fatal("You can't run the setup without devices if you don't have any devices in your configuration file.");
             if (!options.spotify && Config.getSpotifyConfig().accessToken === "" && !fullSetup) return Logger.fatal("You can't run the setup without Spotify if you don't have a Spotify access token in your configuration file.");
-            if ((!options.spotuya && Config.getRefreshRate() === undefined || Config.getStartOnBoot() === undefined) && !fullSetup) return Logger.fatal("You can't run the setup without SpoTuya settings if you don't have a refresh rate or start on boot in your configuration file.");
+            if ((!options.spotuya && Config.getPollRate() === undefined || Config.getStartOnBoot() === undefined) && !fullSetup) return Logger.fatal("You can't run the setup without SpoTuya settings if you don't have a refresh rate or start on boot in your configuration file.");
 
             if (options.devices || fullSetup) {
                 const {devices, userId, region, clientId, clientSecret} = await Cloud.wizard();
@@ -43,10 +43,14 @@ const setup: Command = {
                 Logger.info("Successfully imported your devices!");
             }
 
-            const dataProvider = (await inquirer.prompt(PROVIDER_QUESTION)).dataProvider;
-            Config.setDataProvider(dataProvider);
+            let dataProvider: URL | "spotify" = "spotify";
+            if (options.spotuya || fullSetup) {
+                dataProvider = (await inquirer.prompt(PROVIDER_QUESTION)).dataProvider;
+                Config.setDataProvider(dataProvider);
+            }
 
             if (options.spotify || (fullSetup && dataProvider === "spotify")) {
+                Config.setDataProvider("spotify")
                 const spotifyConfig = Config.getSpotifyConfig();
                 const answers = await inquirer.prompt(CREDENTIAL_QUESTIONS);
                 spotifyConfig.clientId = answers.clientId;
@@ -64,7 +68,9 @@ const setup: Command = {
 
             if (options.spotuya || fullSetup) {
                 const answers = await inquirer.prompt(GENERAL_QUESTIONS);
-                Config.setRefreshRate(answers.refreshRate);
+                Config.setPollRate(answers.pollRate);
+                Config.setPollMode(answers.pollMode);
+                Config.setMaxPollInterval(answers.maxPollInterval);
                 Config.setStartOnBoot(answers.startOnBoot === "y" || answers.startOnBoot === "yes");
                 Config.setPort(answers.port);
                 Config.setPaletteMode(answers.colorPalette);
