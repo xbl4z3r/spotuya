@@ -5,7 +5,7 @@ import Logger from "./logger.js";
 import os from "os";
 import convert from "color-convert";
 import Config from "../config/config.js";
-import {DeviceData} from "../../@types/types.js";
+import {DeviceData} from "../@types/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

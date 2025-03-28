@@ -1,8 +1,8 @@
 import Config from "../config/config.js";
 
 export default class Palette {
-    static paletteMode = 0;
-    static interval: NodeJS.Timeout | null = null;
+    private static paletteMode = 0;
+    private static interval: NodeJS.Timeout | null = null;
 
     static initialize() {
         this.paletteMode = Config.getPaletteMode();

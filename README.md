@@ -2,8 +2,9 @@
 
 [![Run on Repl.it](https://replit.com/badge/github/xbl4z3r/spotuya)](https://replit.com/new/github/xbl4z3r/spotuya)
 
-SpoTuya, formerly known as Spotify-Tuya, is a simple background process script to change the color of your Tuya lights based on the cover art
-of the song you're listening to on Spotify. It is written in JavaScript and is easy to set up. SpoTuya uses
+SpoTuya, formerly known as Spotify-Tuya, is a simple background process script to change the color of your Tuya lights
+based on the cover art
+of the song you're listening to on Spotify. It is written in TypeScript (as of 2.1.1) and is easy to set up. SpoTuya uses
 the [Tuya API](https://developer.tuya.com/en/docs/cloud/cloudapi?id=K9i5ql6waswzq) to control the lights and
 the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) to get the cover art of the song you're
 listening to. SpoTuya is a fun project that I created to learn more about the Tuya and Spotify APIs and to have a cool
@@ -11,6 +12,7 @@ feature in my room. I hope you enjoy it as much as I do and remember to leave a 
 <br>
 
 ## Cloud API
+
 Starting from version 2.0.0, SpoTuya has been rewritten to use the Tuya Cloud API instead of the Tuya Local API. This
 means that you no longer need to be on the same network as your Tuya devices to control them. This also means that you
 can control your devices from anywhere in the world as long as you have an internet connection. The setup process has
@@ -34,7 +36,7 @@ The latest version of SpoTuya supports the following features:
 - [ ] Support for more music streaming services.
 - [ ] Support for more color palettes.
 - [ ] Support for more light effects.
-<br>
+  <br>
 
 ## Installation
 
@@ -44,7 +46,8 @@ You can also install it locally by running `npm install .`.
 
 ## Setup
 
-To set up SpoTuya you just have to run `spotuya setup` or `spotuya wizard` and follow the instructions. You will be asked
+To set up SpoTuya you just have to run `spotuya setup` or `spotuya wizard` and follow the instructions. You will be
+asked
 to provide a Tuya ID, a Tuya Secret and (sometimes) a single device's virtual ID. You can find the Tuya ID and Secret in
 the [Tuya Developer Console](https://iot.tuya.com/cloud). The virtual ID can be found under the devices tab in the
 project console. Remember that you first need to add your devices to the project via the Tuya Smart app before running

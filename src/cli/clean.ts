@@ -1,5 +1,5 @@
 import Config from "../config/config.js";
-import {Command} from "../../@types/types.js";
+import {Command} from "../@types/types.js";
 
 const clean: Command = {
     name: "clean",

@@ -1,5 +1,5 @@
 import Logger from "../utils/logger.js";
-import {CommandData, DeviceData} from "../../@types/types.js";
+import {CommandData, DeviceData} from "../@types/types.js";
 import Cloud from "../services/cloud.js";
 
 export default class Device {

@@ -5,8 +5,8 @@ import path from "node:path";
 import {SPOTIFY_COLOR} from "./constants.js";
 
 export default class Logger {
-    static debugMode = false;
-    static logFilePath = "not_initialized";
+    private static debugMode = false;
+    private static logFilePath = "not_initialized";
 
     static initialize() {
         const date = new Date();

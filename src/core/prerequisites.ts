@@ -91,4 +91,4 @@ async function setupDevices() {
     return devices;
 }
 
-export { setupApplication, setupSpotify, setupDevices };
+export {setupApplication, setupSpotify, setupDevices};

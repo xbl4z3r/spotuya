@@ -1,5 +1,5 @@
 export class StateStore {
-    static enabled = true;
+    private static enabled = true;
 
     static isEnabled() {
         return this.enabled;

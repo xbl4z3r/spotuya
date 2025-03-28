@@ -1,4 +1,4 @@
-import {Command} from "../../@types/types.js";
+import {Command} from "../@types/types.js";
 import Config from "../config/config.js";
 import Logger from "../utils/logger.js";
 import inquirer from "inquirer";

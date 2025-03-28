@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
-import {ConfigData, DeviceData} from "../../@types/types.js";
+import {ConfigData, DeviceData} from "../@types/types.js";
 import Utils from "../utils/utils.js";
 import Logger from "../utils/logger.js";
 import AutoStartService from "../services/autostart.js";
@@ -34,9 +34,9 @@ const DEFAULT_CONFIG: ConfigData = {
 }
 
 export default class Config {
-    static config: ConfigData;
-    static configPath = '';
-    static useEnv = false;
+    private static config: ConfigData;
+    private static configPath = '';
+    private static useEnv = false;
 
     static getConfigPath() {
         this.configPath = path.join(Utils.getApplicationDirectory(), CONFIG_FILE_NAME);

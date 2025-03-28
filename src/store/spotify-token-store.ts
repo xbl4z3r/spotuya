@@ -6,10 +6,10 @@ import Utils from "../utils/utils.js";
 import Config from "../config/config.js";
 
 export class SpotifyTokenStore {
-    static CLIENT_ID = "";
-    static CLIENT_SECRET = "";
-    static accessToken = "";
-    static refreshToken = "";
+    private static CLIENT_ID = "";
+    private static CLIENT_SECRET = "";
+    private static accessToken = "";
+    private static refreshToken = "";
 
     static async getAccessToken(): Promise<{
         access_token: string,
@@ -72,5 +72,9 @@ export class SpotifyTokenStore {
 
     static setRefreshToken(refreshToken: string) {
         this.refreshToken = refreshToken;
+    }
+
+    static setAccessToken(accessToken: string) {
+        this.accessToken = accessToken;
     }
 }

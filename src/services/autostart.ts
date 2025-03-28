@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { promisify } from "util";
-import { exec as execCb } from "child_process";
+import {promisify} from "util";
+import {exec as execCb} from "child_process";
 import Logger from "../utils/logger.js";
 import Utils from "../utils/utils.js";
 
@@ -19,12 +19,10 @@ export default class AutoStartService {
         try {
             if (process.platform === 'win32') {
                 return fs.existsSync(this.WIN_STARTUP_FILE);
-            }
-            else if (process.platform === 'darwin') {
+            } else if (process.platform === 'darwin') {
                 const plistPath = path.join(process.env.HOME!, 'Library/LaunchAgents/com.spotuya.plist');
                 return fs.existsSync(plistPath);
-            }
-            else if (process.platform === 'linux') {
+            } else if (process.platform === 'linux') {
                 const autostartPath = path.join(process.env.HOME!, '.config/autostart/spotuya.desktop');
                 return fs.existsSync(autostartPath);
             }
@@ -99,7 +97,7 @@ WshShell.Run "cmd /c node ""${entryPoint}"" start", 0, False
     private static async setupLinuxAutostart(): Promise<void> {
         try {
             if (!fs.existsSync(this.LINUX_AUTOSTART_DIR)) {
-                fs.mkdirSync(this.LINUX_AUTOSTART_DIR, { recursive: true });
+                fs.mkdirSync(this.LINUX_AUTOSTART_DIR, {recursive: true});
             }
 
             const entryPoint = path.resolve(Utils.getEntryPoint());
@@ -124,7 +122,7 @@ X-GNOME-Autostart-enabled=true
     private static async setupMacAutostart(): Promise<void> {
         try {
             if (!fs.existsSync(this.MAC_LAUNCHAGENT_DIR)) {
-                fs.mkdirSync(this.MAC_LAUNCHAGENT_DIR, { recursive: true });
+                fs.mkdirSync(this.MAC_LAUNCHAGENT_DIR, {recursive: true});
             }
 
             const entryPoint = path.resolve(Utils.getEntryPoint());

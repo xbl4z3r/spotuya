@@ -1,6 +1,6 @@
 import Logger from "../utils/logger.js";
 import Config from "../config/config.js";
-import {Command, DeviceData} from "../../@types/types.js";
+import {Command, DeviceData} from "../@types/types.js";
 
 const list: Command = {
     name: "list",

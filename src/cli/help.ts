@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import Logger from '../utils/logger.js';
-import { SPOTIFY_COLOR } from '../utils/constants.js';
+import {SPOTIFY_COLOR} from '../utils/constants.js';
 import Utils from '../utils/utils.js';
-import {Command} from "../../@types/types.js";
+import {Command} from "../@types/types.js";
 import CommandHandler from "../core/command-handler.js";
 
 const help: Command = {

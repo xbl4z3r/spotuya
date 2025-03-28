@@ -5,7 +5,7 @@ import Config from "../config/config.js";
 import Utils from "../utils/utils.js";
 import {SPOTIFY_COLOR} from "../utils/constants.js";
 import Cloud from "../services/cloud.js";
-import {Command} from "../../@types/types.js";
+import {Command} from "../@types/types.js";
 
 const upgrade: Command = {
     name: "upgrade",
@@ -49,9 +49,9 @@ async function upgradeFromVersion(version: string): Promise<void> {
             Config.setStartOnBoot(false);
         // Fall through to next version upgrades
         case "1.1.0":
-            const { devices, userId, region, clientId, clientSecret } = await Cloud.wizard();
+            const {devices, userId, region, clientId, clientSecret} = await Cloud.wizard();
             Config.addDevices(devices);
-            Config.setTuyaConfig({ userId, region, clientId, clientSecret });
+            Config.setTuyaConfig({userId, region, clientId, clientSecret});
             Config.setPort(4815);
         // Fall through
         case "2.0.0":
@@ -91,7 +91,7 @@ async function upgradeFromVersion(version: string): Promise<void> {
 async function resetToLatestVersion(): Promise<void> {
     Logger.info("Resetting configuration to latest version...");
 
-    const { devices, userId, region, clientId, clientSecret } = await Cloud.wizard();
+    const {devices, userId, region, clientId, clientSecret} = await Cloud.wizard();
 
     const answers = await inquirer.prompt([
         {
@@ -112,7 +112,7 @@ async function resetToLatestVersion(): Promise<void> {
     ]);
 
     Config.addDevices(devices);
-    Config.setTuyaConfig({ userId, region, clientId, clientSecret });
+    Config.setTuyaConfig({userId, region, clientId, clientSecret});
     Config.setPort(4815);
     Config.setStartOnBoot(false);
     Config.setPaletteMode(answers.colorPalette);

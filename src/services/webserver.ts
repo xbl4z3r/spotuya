@@ -48,22 +48,13 @@ app.get('/callback', (req, res) => {
 app.get('/token', (req, res) => {
     const accessToken = req.query.access_token as string
     const refreshToken = req.query.refresh_token as string
-    if (refreshToken) SpotifyTokenStore.refreshToken = refreshToken
-    if (accessToken) SpotifyTokenStore.accessToken = accessToken;
+    if (refreshToken) SpotifyTokenStore.setRefreshToken(refreshToken);
+    if (accessToken) SpotifyTokenStore.setAccessToken(accessToken);
     res.send('<script>window.close()</script>')
 })
 
 app.get('/', (req, res) => {
-    res.send(
-        `Enabled: ${StateStore.isEnabled()}<br>` +
-        `Playing: ${SpotifyPlaybackStore.getPlaying()}<br>` +
-        `Song name: ${SpotifyPlaybackStore.getSongName()}<br>` +
-        `Artist name: ${SpotifyPlaybackStore.getArtistName()}<br>` +
-        `Album name: ${SpotifyPlaybackStore.getAlbumName()}<br>` +
-        `Album art: ${SpotifyPlaybackStore.getImageUrl()}<br>` +
-        `Progress: ${SpotifyPlaybackStore.getProgress()}<br>` +
-        `Toggle: <button onclick="fetch('/toggle')">Toggle</button><br>`
-    )
+    res.json(SpotifyPlaybackStore.getNowPlaying());
 })
 
 app.get('/toggle', (req, res) => {

@@ -1,17 +1,17 @@
 import inquirer from "inquirer";
 import {TuyaContext} from "@tuya/tuya-connector-nodejs";
 import chalk from "chalk";
-import {ConfigData} from "../../@types/types.js";
+import {ConfigData} from "../@types/types.js";
 import {SPOTIFY_COLOR, TUYA_API_QUESTIONS} from "../utils/constants.js";
 import Logger from "../utils/logger.js";
 
 const REGIONS = ['eu', 'us', 'cn', 'in'];
 
 export default class Cloud {
+    static instance = new Cloud();
     context: any
     userId: string = ""
     region: string = ""
-    static instance = new Cloud();
 
     static async initialize(config: ConfigData['tuya']) {
         Cloud.instance.userId = config.userId;

@@ -1,8 +1,8 @@
-import { glob } from 'glob';
+import {glob} from 'glob';
 import path from 'path';
 import Logger from '../utils/logger.js';
-import {Command} from "../../@types/types.js";
-import { pathToFileURL, fileURLToPath } from 'url';
+import {Command} from "../@types/types.js";
+import {fileURLToPath, pathToFileURL} from 'url';
 
 class CommandHandler {
     private static instance: CommandHandler;
@@ -30,7 +30,7 @@ class CommandHandler {
             const __dirname = path.dirname(fileURLToPath(import.meta.url));
             // Go up one directory since we're in core/ and need to access cli/
             const parentDir = path.resolve(__dirname, '..');
-            const commandFiles = await glob('cli/**/*.js', { cwd: parentDir });
+            const commandFiles = await glob('cli/**/*.js', {cwd: parentDir});
 
             for (const file of commandFiles) {
                 try {
@@ -108,7 +108,7 @@ class CommandHandler {
             }
         }
 
-        return { commandName, parsedArgs, options };
+        return {commandName, parsedArgs, options};
     }
 
     async executeCommand(args: string[]): Promise<void> {
@@ -117,7 +117,7 @@ class CommandHandler {
             return;
         }
 
-        const { commandName, parsedArgs, options } = this.parseArguments(args);
+        const {commandName, parsedArgs, options} = this.parseArguments(args);
 
         let resolvedCommandName = commandName;
         if (!this.commands.has(commandName) && this.aliasMap.has(commandName)) {

@@ -1,4 +1,4 @@
-import {Command} from "../../@types/types.js";
+import {Command} from "../@types/types.js";
 import Logger from "../utils/logger.js";
 import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
 import Config from "../config/config.js";
@@ -8,6 +8,7 @@ import Palette from "../core/palette.js";
 import Utils from "../utils/utils.js";
 import Vibrant from "node-vibrant";
 import {DeviceStore} from "../store/device-store.js";
+import {SpotifyApiService} from "../services/spotify-api.js";
 
 const start: Command = {
     name: 'start',
@@ -37,7 +38,7 @@ const start: Command = {
 
         await setupSpotify();
 
-        SpotifyPlaybackStore.startPolling(Config.getRefreshRate());
+        SpotifyApiService.startPolling(Config.getRefreshRate());
 
         DeviceStore.addDevices(await setupDevices());
 
@@ -48,15 +49,15 @@ const start: Command = {
 
         Logger.info(`Starting color sync with refresh rate of ${Config.getRefreshRate()}ms`);
         setInterval(async () => {
-            if (SpotifyPlaybackStore.getPlaying()) {
+            if (SpotifyPlaybackStore.getNowPlaying().is_playing) {
                 if (!Palette.isCycling()) Palette.initialize();
 
-                const imageUrl = SpotifyPlaybackStore.getImageUrl();
+                const imageUrl = SpotifyPlaybackStore.getNowPlaying().track.artUrl;
                 if (imageUrl) {
                     for (const device of DeviceStore.getDevices()) {
                         await Vibrant.from(imageUrl).getPalette(async (err, palette) => {
                             let rgb = [0, 0, 0];
-                            if (palette == null) return;
+                            if (palette == null || err != null) return;
 
                             switch (Palette.getPaletteMode().toString()) {
                                 case "0":
