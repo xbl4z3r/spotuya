@@ -31,6 +31,7 @@ const DEFAULT_CONFIG: ConfigData = {
     cycleRate: 5000,
     contrastOffset: 0,
     outdatedConfigWarning: true,
+    dataProvider: "spotify",
 }
 
 export default class Config {
@@ -74,6 +75,7 @@ export default class Config {
             cycleRate: parseInt(process.env.CYCLE_RATE || "5000"),
             contrastOffset: parseInt(process.env.CONTRAST_OFFSET || "0"),
             outdatedConfigWarning: (process.env.OUTDATED_CONFIG_WARNING || "") as unknown as boolean || true,
+            dataProvider: process.env.DATA_PROVIDER ? new URL(process.env.DATA_PROVIDER) : "spotify",
         };
         (process.env.DEVICES || "").split(',').forEach(device => {
             this.config.devices.push({
@@ -203,6 +205,13 @@ export default class Config {
         this.saveConfig();
     }
 
+    static setDataProvider(provider: "spotify" | URL) {
+        if (this.config === undefined) this.initialize();
+        Logger.debug(`Setting data provider to ${provider}...`);
+        this.config.dataProvider = provider;
+        this.saveConfig();
+    }
+
     static getConfigVersion() {
         if (this.config === undefined) this.initialize();
         return this.config.configVersion;
@@ -262,6 +271,11 @@ export default class Config {
     static getOutdatedConfigWarning() {
         if (this.config === undefined) this.initialize();
         return this.config.outdatedConfigWarning;
+    }
+
+    static getDataProvider() {
+        if (this.config === undefined) this.initialize();
+        return this.config.dataProvider;
     }
 
     static handleConfigActions(args: string[]) {

@@ -38,6 +38,7 @@ export interface ConfigData {
     cycleRate: number,
     contrastOffset: number,
     outdatedConfigWarning: boolean,
+    dataProvider: "spotify" | URL,
 }
 
 export interface CommandOption {

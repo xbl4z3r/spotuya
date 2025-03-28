@@ -5,7 +5,7 @@ const clean: Command = {
     name: "clean",
     description: "Clean the configuration.",
     options: [],
-    run: async () => {
+    run: async (args: string[], options: Record<string, any>) => {
         Config.cleanConfig();
     }
 }

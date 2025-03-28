@@ -7,6 +7,13 @@ export const SCOPE = [
 
 export const SPOTIFY_COLOR = "#1DB954";
 
+export const PROVIDER_QUESTION = {
+    name: 'dataProvider',
+    message: 'Where to get the data from? (spotify, *your_custom_server_url*) (default: spotify):',
+    prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]"),
+    default: "spotify"
+}
+
 export const CREDENTIAL_QUESTIONS = [
     {
         name: 'clientId',

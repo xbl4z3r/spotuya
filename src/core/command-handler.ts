@@ -111,13 +111,58 @@ class CommandHandler {
         return {commandName, parsedArgs, options};
     }
 
+    parseFlagArguments(args: string[]): {
+        commandName: string,
+        parsedArgs: string[],
+        options: Record<string, any>,
+        flags: string[]
+    } {
+        const {commandName, parsedArgs, options} = this.parseArguments(args);
+
+        const flags: string[] = [];
+        for (const arg of args) {
+            if (/^-[a-zA-Z]$/.test(arg)) {
+                flags.push(arg.slice(1));
+            } else if (/^-[a-zA-Z]{2,}$/.test(arg)) {
+                const combinedFlags = arg.slice(1).split('');
+                flags.push(...combinedFlags);
+
+                for (const flag of combinedFlags) {
+                    const matchedCommand = Array.from(this.commands.values()).find(cmd =>
+                        cmd.options?.some(opt => opt.alias === flag)
+                    );
+
+                    if (matchedCommand) {
+                        const option = matchedCommand.options.find(opt => opt.alias === flag);
+                        if (option) {
+                            options[option.name] = true;
+                        }
+                    } else {
+                        options[flag] = true;
+                    }
+                }
+            } else if (/^--[a-zA-Z][\w-]*$/.test(arg)) {
+                const flagName = arg.slice(2);
+
+                const nextArg = args[args.indexOf(arg) + 1];
+                const isStandaloneFlag = !nextArg || nextArg.startsWith('-');
+
+                if (isStandaloneFlag) {
+                    flags.push(flagName);
+                }
+            }
+        }
+
+        return {commandName, parsedArgs, options, flags};
+    }
+
     async executeCommand(args: string[]): Promise<void> {
         if (!args.length) {
             Logger.error('No command specified');
             return;
         }
 
-        const {commandName, parsedArgs, options} = this.parseArguments(args);
+        const {commandName, parsedArgs, options, flags} = this.parseFlagArguments(args);
 
         let resolvedCommandName = commandName;
         if (!this.commands.has(commandName) && this.aliasMap.has(commandName)) {
@@ -134,6 +179,10 @@ class CommandHandler {
         try {
             if (command.options) {
                 command.options.forEach(option => {
+                    if ((flags.includes(option.name) || (option.alias && flags.includes(option.alias)))) {
+                        options[option.name] = true;
+                    }
+
                     if (option.default !== undefined && options[option.name] === undefined) {
                         options[option.name] = option.default;
                     }

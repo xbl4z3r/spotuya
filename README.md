@@ -4,7 +4,8 @@
 
 SpoTuya, formerly known as Spotify-Tuya, is a simple background process script to change the color of your Tuya lights
 based on the cover art
-of the song you're listening to on Spotify. It is written in TypeScript (as of 2.1.1) and is easy to set up. SpoTuya uses
+of the song you're listening to on Spotify. It is written in TypeScript (as of 2.1.1) and is easy to set up. SpoTuya
+uses
 the [Tuya API](https://developer.tuya.com/en/docs/cloud/cloudapi?id=K9i5ql6waswzq) to control the lights and
 the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) to get the cover art of the song you're
 listening to. SpoTuya is a fun project that I created to learn more about the Tuya and Spotify APIs and to have a cool

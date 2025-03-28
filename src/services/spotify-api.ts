@@ -3,6 +3,24 @@ import Logger from "../utils/logger.js";
 import {SpotifyTokenStore} from "../store/spotify-token-store.js";
 import {NowPlaying} from "../@types/types.js";
 import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
+import Config from "../config/config.js";
+
+const BASE_NOW_PLAYING: NowPlaying = {
+    initialized: false,
+    error: null,
+    is_playing: false,
+    track: {
+        name: "Not Playing",
+        artists: [{name: "No Artist", url: ""}],
+        album: {name: "No Album", url: ""},
+        duration: 1,
+        artUrl: "https://placehold.co/200",
+        url: "",
+    },
+    progress: 0,
+    played_at: Date.now().toString(),
+    type: "unknown",
+};
 
 export class SpotifyApiService {
     private static instance = new SpotifyApiService();
@@ -20,23 +38,43 @@ export class SpotifyApiService {
         if (accessToken) SpotifyApiService.setAccessToken(accessToken);
     }
 
-    static async fetchCurrentPlayback(): Promise<NowPlaying> {
-        let nowPlaying: NowPlaying = {
-            initialized: false,
-            error: null,
-            is_playing: false,
-            track: {
-                name: "Not Playing",
-                artists: [{name: "No Artist", url: ""}],
-                album: {name: "No Album", url: ""},
-                duration: 1,
-                artUrl: "https://placehold.co/200",
-                url: "",
-            },
-            progress: 0,
-            played_at: Date.now().toString(),
-            type: "unknown",
-        };
+    static startPolling(interval: number = this.intervalDuration) {
+        if (this.pollingInterval) {
+            this.stopPolling();
+        }
+
+        this.intervalDuration = interval;
+        this.fetchAndStoreNowPlaying();
+
+        this.pollingInterval = setInterval(() => {
+            this.fetchAndStoreNowPlaying();
+        }, interval);
+
+        Logger.debug(`Spotify playback polling started with ${interval}ms interval`);
+    }
+
+    static stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+            Logger.debug("Spotify playback polling stopped");
+        }
+    }
+
+    static setPollingInterval(interval: number) {
+        this.intervalDuration = interval;
+        if (this.pollingInterval) {
+            this.stopPolling();
+            this.startPolling(interval);
+        }
+    }
+
+    static isPolling(): boolean {
+        return this.pollingInterval !== null;
+    }
+
+    private static async fetchCurrentPlaybackSpotify(): Promise<NowPlaying> {
+        let nowPlaying: NowPlaying = BASE_NOW_PLAYING;
 
         try {
             const data = await SpotifyApiService.getApi().getMyCurrentPlaybackState();
@@ -97,47 +135,39 @@ export class SpotifyApiService {
         return nowPlaying;
     }
 
-    static startPolling(interval: number = this.intervalDuration) {
-        if (this.pollingInterval) {
-            this.stopPolling();
+    private static async fetchCurrentPlaybackCustom(): Promise<NowPlaying> {
+        let nowPlaying: NowPlaying = BASE_NOW_PLAYING;
+
+        try {
+            const response = await fetch(Config.getDataProvider());
+            if (response.ok) {
+                nowPlaying = await response.json();
+            } else {
+                nowPlaying.is_playing = false;
+                nowPlaying.initialized = true;
+                nowPlaying.error = "No active playback";
+            }
+        } catch (error: any) {
+            Logger.error(`Failed to fetch playback state: ${error}`);
+            nowPlaying.is_playing = false;
+            nowPlaying.initialized = true;
+            nowPlaying.error = error;
         }
 
-        this.intervalDuration = interval;
-        this.fetchCurrentPlayback().then(playback => SpotifyPlaybackStore.setNowPlaying(playback));
-
-        this.pollingInterval = setInterval(() => {
-            this.fetchCurrentPlayback().then(playback => SpotifyPlaybackStore.setNowPlaying(playback));
-        }, interval);
-
-        Logger.debug(`Spotify playback polling started with ${interval}ms interval`);
+        return nowPlaying;
     }
 
-    static stopPolling() {
-        if (this.pollingInterval) {
-            clearInterval(this.pollingInterval);
-            this.pollingInterval = null;
-            Logger.debug("Spotify playback polling stopped");
-        }
+    private static fetchAndStoreNowPlaying(): void {
+        if (Config.getDataProvider() === "spotify") this.fetchCurrentPlaybackSpotify().then(playback => SpotifyPlaybackStore.setNowPlaying(playback));
+        else this.fetchCurrentPlaybackCustom().then(playback => SpotifyPlaybackStore.setNowPlaying(playback));
     }
 
-    static setPollingInterval(interval: number) {
-        this.intervalDuration = interval;
-        if (this.pollingInterval) {
-            this.stopPolling();
-            this.startPolling(interval);
-        }
-    }
-
-    static isPolling(): boolean {
-        return this.pollingInterval !== null;
-    }
-
-    static setAccessToken(accessToken: string) {
+    private static setAccessToken(accessToken: string) {
         if (SpotifyApiService.instance.spotifyApi) SpotifyApiService.instance.spotifyApi.setAccessToken(accessToken);
         else Logger.error("Spotify API not initialized");
     }
 
-    static getApi(): SpotifyWebApi {
+    private static getApi(): SpotifyWebApi {
         if (!SpotifyApiService.instance.spotifyApi) Logger.error("Spotify API not initialized");
         return SpotifyApiService.instance.spotifyApi as SpotifyWebApi;
     }

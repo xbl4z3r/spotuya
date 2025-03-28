@@ -6,15 +6,15 @@ import {Command} from "../@types/types.js";
 import CommandHandler from "../core/command-handler.js";
 
 const help: Command = {
-    name: 'help',
-    aliases: ['h'],
-    description: 'Display help information about available commands',
+    name: "help",
+    aliases: ["commands", "h"],
+    description: "Display help information about available commands",
     options: [
         {
-            name: 'command',
-            description: 'Show help for a specific command',
+            name: "command",
+            description: "Show help for a specific command",
             required: false,
-            type: 'string'
+            type: "string"
         }
     ],
     run: async (args: string[], options: Record<string, any>): Promise<void> => {

@@ -2,14 +2,14 @@ import {Command} from "../@types/types.js";
 import Config from "../config/config.js";
 import Logger from "../utils/logger.js";
 import inquirer from "inquirer";
-import {CREDENTIAL_QUESTIONS, GENERAL_QUESTIONS} from "../utils/constants.js";
+import {CREDENTIAL_QUESTIONS, GENERAL_QUESTIONS, PROVIDER_QUESTION} from "../utils/constants.js";
 import {SpotifyTokenStore} from "../store/spotify-token-store.js";
 import {Webserver} from "../services/webserver.js";
 import Cloud from "../services/cloud.js";
 
 const setup: Command = {
     name: "setup",
-    aliases: ["wizard"],
+    aliases: ["wizard", "init"],
     description: "Run the setup wizard to configure SpoTuya.",
     options: [
         {
@@ -43,7 +43,10 @@ const setup: Command = {
                 Logger.info("Successfully imported your devices!");
             }
 
-            if (options.spotify || fullSetup) {
+            const dataProvider = (await inquirer.prompt(PROVIDER_QUESTION)).dataProvider;
+            Config.setDataProvider(dataProvider);
+
+            if (options.spotify || (fullSetup && dataProvider === "spotify")) {
                 const spotifyConfig = Config.getSpotifyConfig();
                 const answers = await inquirer.prompt(CREDENTIAL_QUESTIONS);
                 spotifyConfig.clientId = answers.clientId;

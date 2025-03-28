@@ -2,7 +2,7 @@ import {Command} from "../@types/types.js";
 import Logger from "../utils/logger.js";
 import {SpotifyPlaybackStore} from "../store/spotify-playback-store.js";
 import Config from "../config/config.js";
-import {setupDevices, setupSpotify} from "../core/prerequisites.js";
+import {setupDevices, setupGeneral, setupSpotify} from "../core/prerequisites.js";
 import {StateStore} from "../store/state-store.js";
 import Palette from "../core/palette.js";
 import Utils from "../utils/utils.js";
@@ -11,46 +11,33 @@ import {DeviceStore} from "../store/device-store.js";
 import {SpotifyApiService} from "../services/spotify-api.js";
 
 const start: Command = {
-    name: 'start',
-    description: 'Start the Spotuya service',
+    name: "start",
+    aliases: ["s", "run"],
+    description: "Start the Spotuya service",
     options: [],
-    run: async () => {
+    run: async (args: string[], options: Record<string, any>) => {
         if (Config.getDevices().length === 0) {
             return Logger.fatal("No devices found! Make sure your configuration is correct. To set it up run `spotuya setup`.");
         }
 
-        Logger.info("Checking configuration...")
-        const spotifyConfig = Config.getSpotifyConfig();
-
-        if (Config.getDevices() === undefined ||
-            Config.getRefreshRate() === undefined ||
-            spotifyConfig === undefined ||
-            spotifyConfig.refreshToken === undefined ||
-            spotifyConfig.clientId === undefined ||
-            spotifyConfig.clientSecret === undefined) {
-            Logger.fatal("Invalid configuration file. Please run `spotuya setup --clean` to set up your config.json file.");
-        }
-
-        if (Config.getRefreshRate() < 1000) {
-            Config.setRefreshRate(1000);
-            Logger.warn("Your refresh rate was too low and has been updated to 200ms.");
-        }
-
-        await setupSpotify();
+        if (!(await setupGeneral())) return Logger.fatal("Failed to set up general configuration. Please check your configuration file.");
+        if (Config.getDataProvider() === "spotify") if (!(await setupSpotify())) return Logger.fatal("Failed to set up Spotify configuration. Please check your configuration file.");
 
         SpotifyApiService.startPolling(Config.getRefreshRate());
 
-        DeviceStore.addDevices(await setupDevices());
-
-        if (!StateStore.isEnabled()) {
-            await Utils.resetDevices(DeviceStore.getDevices());
-            return;
-        }
+        const devices = await setupDevices();
+        if (devices == null) return Logger.fatal("Failed to set up devices. Please check your configuration file.");
+        DeviceStore.addDevices(devices);
 
         Logger.info(`Starting color sync with refresh rate of ${Config.getRefreshRate()}ms`);
         setInterval(async () => {
             if (SpotifyPlaybackStore.getNowPlaying().is_playing) {
                 if (!Palette.isCycling()) Palette.initialize();
+
+                if (!StateStore.isEnabled()) {
+                    await Utils.resetDevices(DeviceStore.getDevices());
+                    return;
+                }
 
                 const imageUrl = SpotifyPlaybackStore.getNowPlaying().track.artUrl;
                 if (imageUrl) {

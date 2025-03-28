@@ -3,36 +3,19 @@ import inquirer from "inquirer";
 import Logger from "../utils/logger.js";
 import Config from "../config/config.js";
 import Utils from "../utils/utils.js";
-import {SPOTIFY_COLOR} from "../utils/constants.js";
+import {PROVIDER_QUESTION, SPOTIFY_COLOR} from "../utils/constants.js";
 import Cloud from "../services/cloud.js";
 import {Command} from "../@types/types.js";
 
 const upgrade: Command = {
     name: "upgrade",
+    aliases: ["update"],
     description: "Upgrade the configuration to the latest version.",
-    options: [
-        {
-            name: "force",
-            description: "Force the upgrade.",
-            alias: "f",
-            type: "boolean",
-        },
-        {
-            name: "reset",
-            description: "Reset the configuration to the latest version.",
-            alias: "r",
-            type: "boolean"
-        }
-    ],
-    run: async (options: Record<string, any>): Promise<void> => {
+    options: [],
+    run: async (args: string[], options: Record<string, any>): Promise<void> => {
         Logger.info("Checking configuration...");
-        if (Config.getConfigVersion() === Utils.getVersion() && !options.force) {
+        if (Config.getConfigVersion() === Utils.getVersion()) {
             return Logger.info("Your configuration is up to date.");
-        }
-        if (options.reset) {
-            Logger.warn("Forcing configuration reset to latest version...");
-            await resetToLatestVersion();
-            return;
         }
         Logger.info(`Updating configuration to v${Utils.getVersion()}.`);
         const currentVersion = Config.getConfigVersion();
@@ -82,42 +65,15 @@ async function upgradeFromVersion(version: string): Promise<void> {
         // Fall through
         case "2.1.0":
             Config.setOutdatedConfigWarning(false);
+        // Fall through
+        case "2.1.1":
+            const dataProvider = (await inquirer.prompt(PROVIDER_QUESTION)).dataProvider;
+            Config.setDataProvider(dataProvider);
             break;
         default:
-            Logger.warn(`Unknown configuration version: ${version}. Proceeding with latest configuration.`);
+            Logger.warn(`No known upgrade path for version ${version}.`);
+            break;
     }
-}
-
-async function resetToLatestVersion(): Promise<void> {
-    Logger.info("Resetting configuration to latest version...");
-
-    const {devices, userId, region, clientId, clientSecret} = await Cloud.wizard();
-
-    const answers = await inquirer.prompt([
-        {
-            name: 'colorPalette',
-            message: 'The color palette to use (-1: Cycle, 0: Vibrant, 1: DarkVibrant, 2: LightVibrant, 3: Muted, 4: DarkMuted, 5: LightMuted):',
-            prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
-        },
-        {
-            name: 'cycleRate',
-            message: 'The rate at which the color palette should cycle (in milliseconds):',
-            prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
-        },
-        {
-            name: 'contrastOffset',
-            message: 'The contrast offset to apply to the color palette (between -100 and 100):',
-            prefix: chalk.hex(SPOTIFY_COLOR)("[SpoTuya - " + new Date().toLocaleTimeString('en-US', {hour12: false}) + "]")
-        }
-    ]);
-
-    Config.addDevices(devices);
-    Config.setTuyaConfig({userId, region, clientId, clientSecret});
-    Config.setPort(4815);
-    Config.setStartOnBoot(false);
-    Config.setPaletteMode(answers.colorPalette);
-    Config.setRefreshRate(answers.cycleRate);
-    Config.setContrastOffset(answers.contrastOffset);
 }
 
 export default upgrade;
